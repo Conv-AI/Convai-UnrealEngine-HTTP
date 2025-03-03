@@ -1,0 +1,117 @@
+// Copyright Epic Games, Inc. All Rights Reserved.
+
+using UnrealBuildTool;
+using System.IO;
+public class CONVAIHTTP : ModuleRules
+{
+	protected virtual bool bPlatformSupportsWinHttp
+	{
+		get
+		{
+			return Target.Platform.IsInGroup(UnrealPlatformGroup.Windows);
+		}
+	}
+
+	protected virtual bool bPlatformSupportsLibCurl
+	{
+		get
+		{
+			return Target.Platform.IsInGroup(UnrealPlatformGroup.Windows) ||
+				Target.IsInPlatformGroup(UnrealPlatformGroup.Unix) ||
+				Target.IsInPlatformGroup(UnrealPlatformGroup.Android);
+		}
+	}
+	protected virtual bool bPlatformSupportsXCurl { get { return false; } }
+
+	private bool bPlatformSupportsCurl { get { return bPlatformSupportsLibCurl || bPlatformSupportsXCurl; } }
+
+	protected virtual bool bPlatformRequiresOpenSSL
+	{
+		get
+		{
+			return Target.Platform.IsInGroup(UnrealPlatformGroup.Windows) ||
+				Target.IsInPlatformGroup(UnrealPlatformGroup.Unix) ||
+				Target.IsInPlatformGroup(UnrealPlatformGroup.Android);
+		}
+	}
+
+	public CONVAIHTTP(ReadOnlyTargetRules Target) : base(Target)
+	{
+		PublicDefinitions.Add("CONVAIHTTP_PACKAGE=1");
+
+		PrivateIncludePaths.AddRange(
+			new string[] {
+				//"Runtime/Online/HTTP/Private",
+				"CONVAIHTTP/Private",
+			}
+			);
+
+		PublicDependencyModuleNames.AddRange(
+			new string[] {
+				"Core", "zlib"
+			}
+			);
+
+		PrivateDependencyModuleNames.AddRange(
+			new string[] {
+				"SSL",
+			}
+			);
+
+		if (bPlatformSupportsCurl)
+		{
+			PrivateDependencyModuleNames.AddRange(
+				new string[] {
+					"Sockets",
+				}
+			);
+
+			if (bPlatformSupportsLibCurl && !bPlatformSupportsXCurl)
+			{
+				PublicDefinitions.Add("WITH_LIBCURL=1");
+				PublicDefinitions.Add("CURL_STATICLIB=1");
+				
+				PublicIncludePaths.AddRange(new string[]
+				{
+					Path.Combine(ModuleDirectory, "../ThirdParty", "curl-8.12.1", "include")
+				});
+				
+				PublicAdditionalLibraries.AddRange(new string[]
+				{
+					Path.Combine(ModuleDirectory, "../ThirdParty", "curl-8.12.1", "lib", "libcurl.lib")
+				});
+				
+				PublicDefinitions.Add("CURL_ENABLE_DEBUG_CALLBACK=1");
+				if (Target.Configuration != UnrealTargetConfiguration.Shipping)
+				{
+					PublicDefinitions.Add("CURL_ENABLE_NO_TIMEOUTS_OPTION=1");
+				}
+			}
+		}
+
+		PrivateDefinitions.Add("WITH_CURL_LIBCURL =" + (bPlatformSupportsLibCurl ? "1" : "0"));
+		PrivateDefinitions.Add("WITH_CURL_XCURL=" + (bPlatformSupportsXCurl ? "1" : "0"));
+		PrivateDefinitions.Add("WITH_CURL= " + ((bPlatformSupportsLibCurl || bPlatformSupportsXCurl) ? "1" : "0"));
+
+		// Use Curl over WinHttp on platforms that support it (until WinHttp client security is in a good place at the least)
+		if (bPlatformSupportsWinHttp)
+		{
+			AddEngineThirdPartyPrivateStaticDependencies(Target, "WinHttp");
+			PublicDefinitions.Add("WITH_WINHTTP=1");
+		}
+		else
+		{
+			PublicDefinitions.Add("WITH_WINHTTP=0");
+		}
+
+		if (bPlatformRequiresOpenSSL)
+		{
+			AddEngineThirdPartyPrivateStaticDependencies(Target, "OpenSSL");
+		}
+
+		if (Target.Platform == UnrealTargetPlatform.IOS || Target.Platform == UnrealTargetPlatform.TVOS || Target.Platform == UnrealTargetPlatform.Mac)
+		{
+			PublicFrameworks.Add("Security");
+		}
+	}
+}
