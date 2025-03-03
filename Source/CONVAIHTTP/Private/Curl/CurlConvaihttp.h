@@ -3,13 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "HAL/ThreadSafeCounter.h"
 #include "Interfaces/IConvaihttpResponse.h"
 #include "IConvaihttpThreadedRequest.h"
 #include "Containers/Queue.h"
 #include "GenericPlatform/ConvaihttpRequestPayload.h"
 #include "HAL/ThreadSafeBool.h"
-
+#include "ConvaiThreadSafeCounter.h"
 class FCurlConvaihttpResponse;
 
 #if WITH_CURL
@@ -399,9 +398,9 @@ private:
 	/** Have we had any CONVAIHTTP activity with the host? Sending headers, SSL handshake, etc */
 	bool bAnyConvaihttpActivity;
 	/** Number of bytes sent already */
-	FThreadSafeCounter BytesSent;
+	FConvaiThreadSafeCounter BytesSent;
 	/** Total number of bytes sent already (includes data re-sent by seek attempts) */
-	FThreadSafeCounter TotalBytesSent;
+	FConvaiThreadSafeCounter TotalBytesSent;
 	/** Last bytes read reported to progress delegate */
 	int32 LastReportedBytesRead;
 	/** Last bytes sent reported to progress delegate */
@@ -463,7 +462,7 @@ private:
 	/** BYTE array to fill in as the response is read via didReceiveData */
 	TArray64<uint8> Payload;
 	/** Caches how many bytes of the response we've read so far */
-	FThreadSafeCounter TotalBytesRead;
+	FConvaiThreadSafeCounter TotalBytesRead;
 	/** Cached key/value header pairs. Parsed once request completes. Only accessible on the game thread. */
 	TMap<FString, FString> Headers;
 	/** Newly received headers we need to inform listeners about */

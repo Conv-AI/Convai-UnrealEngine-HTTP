@@ -3,9 +3,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "HAL/ThreadSafeCounter.h"
 #include "HAL/Runnable.h"
 #include "ConvaihttpPackage.h"
+#include "ConvaiThreadSafeCounter.h"
 #include "Misc/SingleThreadRunnable.h"
 #include "Containers/Queue.h"
 
@@ -111,7 +111,7 @@ protected:
 	void Process(TArray64<IConvaihttpThreadedRequest*>& RequestsToCancel, TArray64<IConvaihttpThreadedRequest*>& RequestsToComplete);
 
 	/** signal request to stop and exit thread */
-	FThreadSafeCounter ExitRequest;
+	FConvaiThreadSafeCounter ExitRequest;
 
 	/** Time in seconds to use as frame time when actively processing requests. 0 means no frame time. */
 	double ConvaihttpThreadActiveFrameTimeInSeconds;

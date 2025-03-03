@@ -249,7 +249,11 @@ void FCurlConvaihttpManager::InitCurl()
 	{
 		CurlRequestOptions.BufferSize = ConfigBufferSize;
 	}
-
+	else
+	{
+		CurlRequestOptions.BufferSize = 65536; // 64KB buffer
+	}
+	
 	GConfig->GetBool(TEXT("CONVAIHTTP.Curl"), TEXT("bAllowSeekFunction"), CurlRequestOptions.bAllowSeekFunction, GEngineIni);
 
 	CurlRequestOptions.MaxHostConnections = FConvaihttpModule::Get().GetConvaihttpMaxConnectionsPerServer();

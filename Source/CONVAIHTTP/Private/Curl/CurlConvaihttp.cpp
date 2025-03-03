@@ -838,6 +838,7 @@ bool FCurlConvaihttpRequest::SetupRequestConvaihttpThread()
 			check(!GetHeader(TEXT("Content-Type")).IsEmpty() || RequestPayload->IsURLEncoded());
 			curl_easy_setopt(EasyHandle, CURLOPT_POST, 1L);
 			curl_easy_setopt(EasyHandle, CURLOPT_POSTFIELDS, NULL);
+			curl_easy_setopt(EasyHandle, CURLOPT_POSTFIELDSIZE_LARGE, static_cast<curl_off_t>(RequestPayload->GetContentLength()));
 #if WITH_CURL_XCURL
 			curl_easy_setopt(EasyHandle, CURLOPT_INFILESIZE, RequestPayload->GetContentLength());
 #else
@@ -848,7 +849,9 @@ bool FCurlConvaihttpRequest::SetupRequestConvaihttpThread()
 		else if (Verb == TEXT("PUT") || Verb == TEXT("PATCH"))
 		{
 			curl_easy_setopt(EasyHandle, CURLOPT_UPLOAD, 1L);
-			curl_easy_setopt(EasyHandle, CURLOPT_INFILESIZE_LARGE, RequestPayload->GetContentLength());
+			//curl_easy_setopt(EasyHandle, CURLOPT_INFILESIZE_LARGE, RequestPayload->GetContentLength());
+			curl_easy_setopt(EasyHandle, CURLOPT_POSTFIELDSIZE_LARGE, static_cast<curl_off_t>(RequestPayload->GetContentLength()));
+
 			if (Verb != TEXT("PUT"))
 			{
 				curl_easy_setopt(EasyHandle, CURLOPT_CUSTOMREQUEST, TCHAR_TO_UTF8(*Verb));
