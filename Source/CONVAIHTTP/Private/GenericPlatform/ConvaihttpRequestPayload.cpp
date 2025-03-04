@@ -111,7 +111,17 @@ bool FRequestPayloadInMemory::IsURLEncoded() const
 
 size_t FRequestPayloadInMemory::FillOutputBuffer(void* OutputBuffer, size_t MaxOutputBufferSize, size_t SizeAlreadySent)
 {
-	return FillOutputBuffer(TArray64<uint8>(static_cast<uint8*>(OutputBuffer), MaxOutputBufferSize), SizeAlreadySent);
+	const size_t ContentLength = static_cast<size_t>(Buffer.Num());
+	check(SizeAlreadySent <= ContentLength);
+	const size_t SizeToSend = ContentLength - SizeAlreadySent;
+	const size_t SizeToSendThisTime = FMath::Min(SizeToSend, MaxOutputBufferSize);
+
+	if (SizeToSendThisTime != 0)
+	{
+		FMemory::Memcpy(OutputBuffer, Buffer.GetData() + SizeAlreadySent, SizeToSendThisTime);
+	}
+	return SizeToSendThisTime;
+	//return FillOutputBuffer(TArray64<uint8>(static_cast<uint8*>(OutputBuffer), MaxOutputBufferSize), SizeAlreadySent);
 }
 
 size_t FRequestPayloadInMemory::FillOutputBuffer(TArray64<uint8> OutputBuffer, size_t SizeAlreadySent)
