@@ -48,7 +48,7 @@ public class CONVAIHTTP : ModuleRules
 
 		PublicDependencyModuleNames.AddRange(
 			new string[] {
-				"Core", "zlib"
+				"Core",
 			}
 			);
 
@@ -68,19 +68,7 @@ public class CONVAIHTTP : ModuleRules
 
 			if (bPlatformSupportsLibCurl && !bPlatformSupportsXCurl)
 			{
-				PublicDefinitions.Add("WITH_LIBCURL=1");
-				PublicDefinitions.Add("CURL_STATICLIB=1");
-				
-				PublicIncludePaths.AddRange(new string[]
-				{
-					Path.Combine(ModuleDirectory, "../ThirdParty", "curl-8.12.1", "include")
-				});
-				
-				PublicAdditionalLibraries.AddRange(new string[]
-				{
-					Path.Combine(ModuleDirectory, "../ThirdParty", "curl-8.12.1", "lib", "libcurl.lib")
-				});
-				
+				AddEngineThirdPartyPrivateStaticDependencies(Target, "libcurl");
 				PublicDefinitions.Add("CURL_ENABLE_DEBUG_CALLBACK=1");
 				if (Target.Configuration != UnrealTargetConfiguration.Shipping)
 				{
