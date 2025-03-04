@@ -696,11 +696,11 @@ bool FWinHttpConnectionConvaihttp::SendAdditionalRequestBody()
 	check(HasRequestBodyToSend());
 	check(Payload.IsValid());
 
-	const int32 TotalBytesLeftToWrite = Payload->GetContentLength() - NumBytesSuccessfullySent;
+	const uint64  TotalBytesLeftToWrite = Payload->GetContentLength() - NumBytesSuccessfullySent;
 	check(TotalBytesLeftToWrite > 0);
 	
 	// Resize buffer to max amount of data we can write
-	const int32 OptimalAmountToWrite = FMath::Min(TotalBytesLeftToWrite, UE_WINHTTP_WRITE_BUFFER_BYTES);
+	const uint64 OptimalAmountToWrite = FMath::Min(TotalBytesLeftToWrite, static_cast<uint64>(UE_WINHTTP_WRITE_BUFFER_BYTES));
 	PayloadBuffer.SetNumUninitialized(OptimalAmountToWrite, false);
 
 	// Read data into our buffer if possible

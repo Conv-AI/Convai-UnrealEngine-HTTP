@@ -795,7 +795,7 @@ bool FCurlConvaihttpRequest::SetupRequest()
 	// content-length should be present convaihttp://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.4
 	if (GetHeader(TEXT("Content-Length")).IsEmpty())
 	{
-		SetHeader(TEXT("Content-Length"), FString::Printf(TEXT("%d"), RequestPayload->GetContentLength()));
+		SetHeader(TEXT("Content-Length"), LexToString(RequestPayload->GetContentLength()));
 	}
 
 	// Remove "Expect: 100-continue" since this is supposed to cause problematic behavior on Amazon ELB (and WinInet doesn't send that either)
@@ -804,7 +804,7 @@ bool FCurlConvaihttpRequest::SetupRequest()
 	{
 		SetHeader(TEXT("Expect"), TEXT(""));
 	}
-
+	
 	return true;
 }
 
