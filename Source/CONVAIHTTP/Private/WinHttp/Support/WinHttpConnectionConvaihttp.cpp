@@ -144,10 +144,10 @@ bool FWinHttpConnectionConvaihttp::StartRequest()
 	// Setup our buffer
 	if (Payload.IsValid())
 	{
-		const int64 NumBytesToWriteNow = FMath::Min(static_cast<int64>(UE_WINHTTP_WRITE_BUFFER_BYTES), Payload->GetContentLength());
+		const uint64 NumBytesToWriteNow = FMath::Min(static_cast<uint64>(UE_WINHTTP_WRITE_BUFFER_BYTES), Payload->GetContentLength());
 		PayloadBuffer.SetNumUninitialized(NumBytesToWriteNow, false);
 
-		const SIZE_T BufferSize = Payload->FillOutputBuffer(PayloadBuffer, 0);
+		const uint64 BufferSize = Payload->FillOutputBuffer(PayloadBuffer, 0);
 		PayloadBuffer.SetNumUninitialized(BufferSize, false);
 	}
 
@@ -233,7 +233,7 @@ void FWinHttpConnectionConvaihttp::PumpMessages()
 		{
 			GameThreadChunk.Append(CurrentChunk);
 		}
-		const int32 ReserveChunkSize = ResponseContentLength >= BytesWrittenToGameThreadChunk 
+		const uint64 ReserveChunkSize = ResponseContentLength >= BytesWrittenToGameThreadChunk 
 			? (ResponseContentLength - BytesWrittenToGameThreadChunk) 
 			: UE_WINHTTP_READ_BUFFER_BYTES;
 		CurrentChunk.Reset(ReserveChunkSize);
@@ -242,10 +242,10 @@ void FWinHttpConnectionConvaihttp::PumpMessages()
 	// Process Data Transfer callbacks
 	if (BytesToReportSent.IsSet() || BytesToReportReceived.IsSet())
 	{
-		const int32 BytesSent = BytesToReportSent.Get(0);
+		const uint64 BytesSent = BytesToReportSent.Get(0);
 		BytesToReportSent.Reset();
 
-		const int32 BytesReceived = BytesToReportReceived.Get(0);
+		const uint64 BytesReceived = BytesToReportReceived.Get(0);
 		BytesToReportReceived.Reset();
 
 		OnDataTransferredHandler.ExecuteIfBound(BytesSent, BytesReceived);
@@ -424,7 +424,7 @@ FWinHttpConnectionConvaihttp::FWinHttpConnectionConvaihttp(
 	: RequestUrl(InUrl)
 {
 	const uint32 LogPort = InPort.Get(bInIsSecure ? 443 : 80);
-	const int32 LogPayloadSize = InPayload.IsValid() ? InPayload->GetContentLength() : 0;
+	const uint64 LogPayloadSize = InPayload.IsValid() ? InPayload->GetContentLength() : 0;
 
 	UE_LOG(LogWinHttp, Verbose, TEXT("WinHttp Convaihttp[%p]: Creating request. InVerb=[%s] bIsSecure=[%d] Domain=[%s] Port=[%u] Path=[%s] PaylodSize=[%d]"), this, *InVerb, bInIsSecure, *InDomain, LogPort, *InPathAndQuery, LogPayloadSize);
 
@@ -646,7 +646,7 @@ bool FWinHttpConnectionConvaihttp::SendRequest()
 	return true;
 }
 
-void FWinHttpConnectionConvaihttp::IncrementSentByteCounts(const int32 AmountSent)
+void FWinHttpConnectionConvaihttp::IncrementSentByteCounts(const uint64 AmountSent)
 {
 	check(CurrentAction == EState::WaitForSendComplete);
 
@@ -664,7 +664,7 @@ void FWinHttpConnectionConvaihttp::IncrementSentByteCounts(const int32 AmountSen
 	NumBytesSuccessfullySent += AmountSent;
 }
 
-void FWinHttpConnectionConvaihttp::IncrementReceivedByteCounts(const int32 AmountReceived)
+void FWinHttpConnectionConvaihttp::IncrementReceivedByteCounts(const uint64 AmountReceived)
 {
 	check(CurrentAction == EState::WaitForNextResponseBodyChunkData);
 
@@ -893,7 +893,7 @@ bool FWinHttpConnectionConvaihttp::RequestNextResponseBodyChunkData()
 	check(CurrentAction == EState::RequestNextResponseBodyChunkData);
 	check(ResponseBytesAvailable.IsSet());
 
-	const int32 NumBytesAvailable = ResponseBytesAvailable.GetValue();
+	const uint64 NumBytesAvailable = ResponseBytesAvailable.GetValue();
 	ResponseBytesAvailable.Reset();
 
 	if (NumBytesAvailable == 0)
@@ -904,7 +904,7 @@ bool FWinHttpConnectionConvaihttp::RequestNextResponseBodyChunkData()
 		return true;
 	}
 
-	int32 ResponseBytesWritten = CurrentChunk.Num();
+	uint64 ResponseBytesWritten = CurrentChunk.Num();
 	CurrentChunk.AddUninitialized(NumBytesAvailable);
 
 	CurrentAction = EState::WaitForNextResponseBodyChunkData;
@@ -980,7 +980,7 @@ void FWinHttpConnectionConvaihttp::HandleSendingRequest()
 	}
 }
 
-void FWinHttpConnectionConvaihttp::HandleWriteComplete(const uint32 NumBytesSent)
+void FWinHttpConnectionConvaihttp::HandleWriteComplete(const uint64 NumBytesSent)
 {
 	UE_LOG(LogWinHttp, VeryVerbose, TEXT("WinHttp Convaihttp[%p]: Callback Status=[WRITE_COMPLETE] NumBytesSent=[%d]"), this, NumBytesSent);
 
@@ -1060,7 +1060,7 @@ void FWinHttpConnectionConvaihttp::HandleHeadersAvailable()
 	ReleasePayloadData();
 }
 
-void FWinHttpConnectionConvaihttp::HandleDataAvailable(const uint32 NumBytesAvailable)
+void FWinHttpConnectionConvaihttp::HandleDataAvailable(const uint64 NumBytesAvailable)
 {
 	UE_LOG(LogWinHttp, VeryVerbose, TEXT("WinHttp Convaihttp[%p]: Callback Status=[DATA_AVAILABLE] NumBytesAvailable=[%u]"), this, NumBytesAvailable);
 
@@ -1075,7 +1075,7 @@ void FWinHttpConnectionConvaihttp::HandleDataAvailable(const uint32 NumBytesAvai
 	CurrentAction = EState::RequestNextResponseBodyChunkData;
 }
 
-void FWinHttpConnectionConvaihttp::HandleReadComplete(const uint32 NumBytesRead)
+void FWinHttpConnectionConvaihttp::HandleReadComplete(const uint64 NumBytesRead)
 {
 	UE_LOG(LogWinHttp, VeryVerbose, TEXT("WinHttp Convaihttp[%p]: Callback Status=[READ_COMPLETE] NumBytesRead=[%u]"), this, NumBytesRead);
 

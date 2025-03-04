@@ -137,7 +137,7 @@ void FConvaihttpRetrySystem::FRequest::CancelRequest()
 	RetryManager.CancelRequest(RetryRequest);
 }
 
-void FConvaihttpRetrySystem::FRequest::ConvaihttpOnRequestProgress(FConvaihttpRequestPtr InConvaihttpRequest, int64 BytesSent, int64 BytesRcv)
+void FConvaihttpRetrySystem::FRequest::ConvaihttpOnRequestProgress(FConvaihttpRequestPtr InConvaihttpRequest, uint64 BytesSent, uint64 BytesRcv)
 {
 	OnRequestProgress().ExecuteIfBound(AsShared(), BytesSent, BytesRcv);
 }

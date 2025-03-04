@@ -101,7 +101,7 @@ namespace FConvaihttpRetrySystem
 			const FRetryDomainsPtr& InRetryDomains = FRetryDomainsPtr()
 			);
 
-		void ConvaihttpOnRequestProgress(FConvaihttpRequestPtr InConvaihttpRequest, int64 BytesSent, int64 BytesRcv);
+		void ConvaihttpOnRequestProgress(FConvaihttpRequestPtr InConvaihttpRequest, uint64 BytesSent, uint64 BytesRcv);
 
 		/** Update our CONVAIHTTP request's URL's domain from our RetryDomains */
 		void SetUrlFromRetryDomains();

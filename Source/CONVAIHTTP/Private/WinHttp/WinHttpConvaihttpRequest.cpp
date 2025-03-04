@@ -65,7 +65,7 @@ FString FWinHttpConvaihttpRequest::GetContentType() const
 	return GetHeader(TEXT("Content-Type"));
 }
 
-int64 FWinHttpConvaihttpRequest::GetContentLength() const
+uint64 FWinHttpConvaihttpRequest::GetContentLength() const
 {
 	return RequestData.Payload.IsValid() ? RequestData.Payload->GetContentLength() : 0;
 }

@@ -23,7 +23,7 @@ public:
 	virtual FString                       GetHeader(const FString& HeaderName) const override                      { return ConvaihttpRequest->GetHeader(HeaderName); }
 	virtual TArray64<FString>               GetAllHeaders() const override                                           { return ConvaihttpRequest->GetAllHeaders(); }
 	virtual FString                       GetContentType() const override                                          { return ConvaihttpRequest->GetContentType(); }
-	virtual int64 GetContentLength() const override                                        { return ConvaihttpRequest->GetContentLength(); }
+	virtual uint64 GetContentLength() const override                                        { return ConvaihttpRequest->GetContentLength(); }
 	virtual const TArray64<uint8>&          GetContent() const override                                              { return ConvaihttpRequest->GetContent(); }
 	virtual FString                       GetVerb() const override                                                 { return ConvaihttpRequest->GetVerb(); }
 	virtual void                          SetVerb(const FString& Verb) override                                    { ConvaihttpRequest->SetVerb(Verb); }

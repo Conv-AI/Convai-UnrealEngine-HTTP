@@ -29,7 +29,7 @@ public:
 	virtual FString GetHeader(const FString& HeaderName) const override;
 	virtual TArray64<FString> GetAllHeaders() const override;	
 	virtual FString GetContentType() const override;
-	virtual int64 GetContentLength() const override;
+	virtual uint64 GetContentLength() const override;
 	virtual const TArray64<uint8>& GetContent() const override;
 	//~ End IConvaihttpBase Interface
 
@@ -98,7 +98,7 @@ private:
 	bool bIsPayloadFile;
 
 	/** The request payload length in bytes. This must be tracked separately for a file stream */
-	int32 RequestPayloadByteLength;
+	uint64 RequestPayloadByteLength;
 
 	/** The response object which we will use to pair with this request */
 	TSharedPtr<class FAppleConvaihttpResponse,ESPMode::ThreadSafe> Response;
@@ -187,7 +187,7 @@ public:
 	virtual FString GetHeader(const FString& HeaderName) const override;
 	virtual TArray64<FString> GetAllHeaders() const override;	
 	virtual FString GetContentType() const override;
-	virtual int64 GetContentLength() const override;
+	virtual uint64 GetContentLength() const override;
 	virtual const TArray64<uint8>& GetContent() const override;
 	//~ End IConvaihttpBase Interface
 
@@ -211,12 +211,12 @@ public:
 	/**
 	 * Get the number of bytes received so far
 	 */
-	const int32 GetNumBytesReceived() const;
+	const uint64 GetNumBytesReceived() const;
 
 	/**
 	* Get the number of bytes sent so far
 	*/
-	const int32 GetNumBytesWritten() const;
+	const uint64 GetNumBytesWritten() const;
 
 	/**
 	 * Constructor

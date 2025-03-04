@@ -276,7 +276,7 @@ FString FCurlConvaihttpRequest::GetContentType() const
 	return GetHeader(TEXT( "Content-Type" ));
 }
 
-int64 FCurlConvaihttpRequest::GetContentLength() const
+uint64 FCurlConvaihttpRequest::GetContentLength() const
 {
 	return RequestPayload.IsValid() ? RequestPayload->GetContentLength() : 0;
 }
@@ -336,7 +336,7 @@ void FCurlConvaihttpRequest::SetContentAsString(const FString& ContentString)
 		return;
 	}
 
-	int32 Utf8Length = FTCHARToUTF8_Convert::ConvertedLength(*ContentString, ContentString.Len());
+	uint64 Utf8Length = FTCHARToUTF8_Convert::ConvertedLength(*ContentString, ContentString.Len());
 	TArray64<uint8> Buffer;
 	Buffer.SetNumUninitialized(Utf8Length);
 	FTCHARToUTF8_Convert::Convert((UTF8CHAR*)Buffer.GetData(), Buffer.Num(), *ContentString, ContentString.Len());
@@ -544,7 +544,7 @@ size_t FCurlConvaihttpRequest::ReceiveResponseBodyCallback(void* Ptr, size_t Siz
 	TimeSinceLastResponse = 0.0f;
 	if (Response.IsValid())
 	{
-		uint32 SizeToDownload = SizeInBlocks * BlockSizeInBytes;
+		uint64 SizeToDownload = SizeInBlocks * BlockSizeInBytes;
 
 		UE_LOG(LogConvaihttp, Verbose, TEXT("%p: ReceiveResponseBodyCallback: %d bytes out of %d received. (SizeInBlocks=%d, BlockSizeInBytes=%d, Response->TotalBytesRead=%d, Response->GetContentLength()=%d, SizeToDownload=%d (<-this will get returned from the callback))"),
 			this,
@@ -1143,8 +1143,8 @@ void FCurlConvaihttpRequest::Tick(float DeltaSeconds)
 void FCurlConvaihttpRequest::CheckProgressDelegate()
 {
 	QUICK_SCOPE_CYCLE_COUNTER(STAT_FCurlConvaihttpRequest_CheckProgressDelegate);
-	const int64 CurrentBytesRead = Response.IsValid() ? Response->TotalBytesRead.GetValue() : 0;
-	const int64 CurrentBytesSent = BytesSent.GetValue();
+	const uint64 CurrentBytesRead = Response.IsValid() ? Response->TotalBytesRead.GetValue() : 0;
+	const uint64 CurrentBytesSent = BytesSent.GetValue();
 
 	const bool bProcessing = CompletionStatus == EConvaihttpRequestStatus::Processing;
 	const bool bBytesSentChanged = (CurrentBytesSent != LastReportedBytesSent);
@@ -1216,7 +1216,7 @@ void FCurlConvaihttpRequest::FinishedRequest()
 			double ContentLengthDownload = 0.0;
 			if (CURLE_OK == curl_easy_getinfo(EasyHandle, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &ContentLengthDownload) && ContentLengthDownload >= 0.0)
 			{
-				Response->ContentLength = static_cast< int32 >(ContentLengthDownload);
+				Response->ContentLength = static_cast< uint64 >(ContentLengthDownload);
 			}
 			else
 			{
@@ -1424,7 +1424,7 @@ FString FCurlConvaihttpResponse::GetContentType() const
 	return GetHeader(TEXT("Content-Type"));
 }
 
-int64 FCurlConvaihttpResponse::GetContentLength() const
+uint64 FCurlConvaihttpResponse::GetContentLength() const
 {
 	return ContentLength;
 }

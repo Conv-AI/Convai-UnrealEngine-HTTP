@@ -42,7 +42,7 @@ FString FNullConvaihttpRequest::GetContentType() const
 	return GetHeader(TEXT("Content-Type"));
 }
 
-int64 FNullConvaihttpRequest::GetContentLength() const
+uint64 FNullConvaihttpRequest::GetContentLength() const
 {
 	return Payload.Num();
 }
@@ -214,7 +214,7 @@ FString FNullConvaihttpResponse::GetContentType() const
 	return FString();
 }
 
-int64 FNullConvaihttpResponse::GetContentLength() const
+uint64 FNullConvaihttpResponse::GetContentLength() const
 {
 	return 0;
 }

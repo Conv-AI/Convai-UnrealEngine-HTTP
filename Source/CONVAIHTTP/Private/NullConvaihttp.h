@@ -19,7 +19,7 @@ public:
 	virtual FString GetHeader(const FString& HeaderName) const override;
 	virtual TArray64<FString> GetAllHeaders() const override;	
 	virtual FString GetContentType() const override;
-	virtual int64 GetContentLength() const override;
+	virtual uint64 GetContentLength() const override;
 	virtual const TArray64<uint8>& GetContent() const override;
 	// IConvaihttpRequest 
 	virtual FString GetVerb() const override;
@@ -67,7 +67,7 @@ class FNullConvaihttpResponse : public IConvaihttpResponse
 	virtual FString GetHeader(const FString& HeaderName) const override;
 	virtual TArray64<FString> GetAllHeaders() const override;	
 	virtual FString GetContentType() const override;
-	virtual int64 GetContentLength() const override;
+	virtual uint64 GetContentLength() const override;
 	virtual const TArray64<uint8>& GetContent() const override;
 	//~ Begin IConvaihttpResponse Interface
 	virtual int32 GetResponseCode() const override;

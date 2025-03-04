@@ -41,7 +41,7 @@ FRequestPayloadInFileStream::~FRequestPayloadInFileStream()
 {
 }
 
-int64 FRequestPayloadInFileStream::GetContentLength() const
+uint64 FRequestPayloadInFileStream::GetContentLength() const
 {
 	return static_cast<int32>(File->TotalSize());
 }
@@ -94,7 +94,7 @@ FRequestPayloadInMemory::~FRequestPayloadInMemory()
 {
 }
 
-int64 FRequestPayloadInMemory::GetContentLength() const
+uint64 FRequestPayloadInMemory::GetContentLength() const
 {
 	return Buffer.Num();
 }

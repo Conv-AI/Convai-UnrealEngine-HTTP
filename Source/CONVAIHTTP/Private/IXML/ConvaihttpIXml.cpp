@@ -77,7 +77,7 @@ FString FConvaihttpRequestIXML::GetContentType() const
 //-----------------------------------------------------------------------------
 //	
 //-----------------------------------------------------------------------------
-int32 FConvaihttpRequestIXML::GetContentLength() const
+uint64 FConvaihttpRequestIXML::GetContentLength() const
 {
 	return Payload->GetContentLength();
 }
@@ -584,7 +584,7 @@ FString FConvaihttpResponseIXML::GetContentType() const
 //	
 //-----------------------------------------------------------------------------
 
-int32 FConvaihttpResponseIXML::GetContentLength() const
+uint64 FConvaihttpResponseIXML::GetContentLength() const
 {
 	check ( ConvaihttpCB );
 	

@@ -149,7 +149,7 @@ public:
 	virtual FString GetHeader(const FString& HeaderName) const override;
 	virtual TArray64<FString> GetAllHeaders() const override;
 	virtual FString GetContentType() const override;
-	virtual int64 GetContentLength() const override;
+	virtual uint64 GetContentLength() const override;
 	virtual const TArray64<uint8>& GetContent() const override;
 	//~ End IConvaihttpBase Interface
 
@@ -402,9 +402,9 @@ private:
 	/** Total number of bytes sent already (includes data re-sent by seek attempts) */
 	FConvaiThreadSafeCounter TotalBytesSent;
 	/** Last bytes read reported to progress delegate */
-	int32 LastReportedBytesRead;
+	uint64 LastReportedBytesRead;
 	/** Last bytes sent reported to progress delegate */
-	int32 LastReportedBytesSent;
+	uint64 LastReportedBytesSent;
 	/** Number of info channel messages to cache */
 	static const constexpr int32 NumberOfInfoMessagesToCache = 50;
 	/** Index of least recently cached message */
@@ -436,7 +436,7 @@ public:
 	virtual FString GetHeader(const FString& HeaderName) const override;
 	virtual TArray64<FString> GetAllHeaders() const override;	
 	virtual FString GetContentType() const override;
-	virtual int64 GetContentLength() const override;
+	virtual uint64 GetContentLength() const override;
 	virtual const TArray64<uint8>& GetContent() const override;
 	//~ End IConvaihttpBase Interface
 
@@ -470,7 +470,7 @@ private:
 	/** Cached code from completed response */
 	int32 ConvaihttpCode;
 	/** Cached content length from completed response */
-	int32 ContentLength;
+	uint64 ContentLength;
 	/** True when the response has finished async processing */
 	int32 volatile bIsReady;
 	/** True if the response was successfully received/processed */

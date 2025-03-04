@@ -227,7 +227,7 @@ FString FAppleConvaihttpRequest::GetContentType() const
 }
 
 
-int64 FAppleConvaihttpRequest::GetContentLength() const
+uint64 FAppleConvaihttpRequest::GetContentLength() const
 {
 	UE_LOG(LogConvaihttp, Verbose, TEXT("FAppleConvaihttpRequest::GetContentLength() - %i"), RequestPayloadByteLength);
 	return RequestPayloadByteLength;
@@ -524,8 +524,8 @@ void FAppleConvaihttpRequest::Tick(float DeltaSeconds)
 	{
 		if (OnRequestProgress().IsBound())
 		{
-			const int32 BytesWritten = Response->GetNumBytesWritten();
-			const int32 BytesRead = Response->GetNumBytesReceived();
+			const uint64 BytesWritten = Response->GetNumBytesWritten();
+			const uint64 BytesRead = Response->GetNumBytesReceived();
 			if (BytesWritten > 0 || BytesRead > 0)
 			{
 				OnRequestProgress().ExecuteIfBound(SharedThis(this), BytesWritten, BytesRead);
@@ -936,7 +936,7 @@ FString FAppleConvaihttpResponse::GetContentType() const
 }
 
 
-int64 FAppleConvaihttpResponse::GetContentLength() const
+uint64 FAppleConvaihttpResponse::GetContentLength() const
 {
 	UE_LOG(LogConvaihttp, Verbose, TEXT("FAppleConvaihttpResponse::GetContentLength()"));
 
@@ -1015,12 +1015,12 @@ bool FAppleConvaihttpResponse::HadError() const
 	return bHadError;
 }
 
-const int32 FAppleConvaihttpResponse::GetNumBytesReceived() const
+const uint64 FAppleConvaihttpResponse::GetNumBytesReceived() const
 {
 	return [ResponseWrapper getPayload].Num();
 }
 
-const int32 FAppleConvaihttpResponse::GetNumBytesWritten() const
+const uint64 FAppleConvaihttpResponse::GetNumBytesWritten() const
 {
     int32 NumBytesWritten = [ResponseWrapper getBytesWritten];
     return NumBytesWritten;

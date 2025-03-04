@@ -96,7 +96,7 @@ DECLARE_DELEGATE_ThreeParams(FConvaihttpRequestHeaderReceivedDelegate, FConvaiht
  * @param BytesSent the number of bytes sent / uploaded in the request so far.
  * @param BytesReceived the number of bytes received / downloaded in the response so far.
  */
-DECLARE_DELEGATE_ThreeParams(FConvaihttpRequestProgressDelegate, FConvaihttpRequestPtr /*Request*/, int64 /*BytesSent*/, int64 /*BytesReceived*/);
+DECLARE_DELEGATE_ThreeParams(FConvaihttpRequestProgressDelegate, FConvaihttpRequestPtr /*Request*/, uint64 /*BytesSent*/, uint64 /*BytesReceived*/);
 
 /**
  * Delegate called when an Convaihttp request will be retried in the future

@@ -69,6 +69,12 @@ public class CONVAIHTTP : ModuleRules
 			if (bPlatformSupportsLibCurl && !bPlatformSupportsXCurl)
 			{
 				AddEngineThirdPartyPrivateStaticDependencies(Target, "libcurl");
+				
+				PublicIncludePaths.AddRange(new string[]
+				{
+					Path.Combine(ModuleDirectory, "../ThirdParty", "curl-8.12.1", "include")
+				});
+				
 				PublicDefinitions.Add("CURL_ENABLE_DEBUG_CALLBACK=1");
 				if (Target.Configuration != UnrealTargetConfiguration.Shipping)
 				{
