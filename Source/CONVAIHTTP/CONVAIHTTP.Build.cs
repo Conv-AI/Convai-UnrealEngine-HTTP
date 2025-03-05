@@ -68,8 +68,14 @@ public class CONVAIHTTP : ModuleRules
 
 			if (bPlatformSupportsLibCurl && !bPlatformSupportsXCurl)
 			{
-				AddEngineThirdPartyPrivateStaticDependencies(Target, "libcurl");
-				PublicDependencyModuleNames.AddRange(new string[] { "zlib", });
+				if (Target.Version.MajorVersion > 5 || Target.Version.MinorVersion >= 3)
+				{
+					AddEngineThirdPartyPrivateStaticDependencies(Target, "libcurl", "nghttp2", "OpenSSL", "zlib");
+				}
+				else
+				{
+					AddEngineThirdPartyPrivateStaticDependencies(Target, "libcurl", "zlib");
+				}
 				
 				PublicDefinitions.Add("CURL_ENABLE_DEBUG_CALLBACK=1");
 				if (Target.Configuration != UnrealTargetConfiguration.Shipping)
