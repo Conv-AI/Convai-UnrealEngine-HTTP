@@ -8,29 +8,29 @@
 
 using HINTERNET = void*;
 
-class CONVAIHTTP_API FWinHttpHandle
+class CONVAIHTTP_API FCH_WinHttpHandle
 {
 public:
 	/**
 	 * Construct an invalid object
 	 */
-	FWinHttpHandle() = default;
+	FCH_WinHttpHandle() = default;
 
 	/**
 	 * Wrap a new HINTERNET Handle
 	 */
-	explicit FWinHttpHandle(HINTERNET NewHandle);
+	explicit FCH_WinHttpHandle(HINTERNET NewHandle);
 
 	/**
 	 * Destroy any currently held object
 	 */
-	~FWinHttpHandle();
+	~FCH_WinHttpHandle();
 
 	// Copy/Move constructors
-	FWinHttpHandle(const FWinHttpHandle& Other) = delete;
-	FWinHttpHandle(FWinHttpHandle&& Other);
-	FWinHttpHandle& operator=(const FWinHttpHandle& Other) = delete;
-	FWinHttpHandle& operator=(FWinHttpHandle&& Other);
+	FCH_WinHttpHandle(const FCH_WinHttpHandle& Other) = delete;
+	FCH_WinHttpHandle(FCH_WinHttpHandle&& Other);
+	FCH_WinHttpHandle& operator=(const FCH_WinHttpHandle& Other) = delete;
+	FCH_WinHttpHandle& operator=(FCH_WinHttpHandle&& Other);
 
 	/**
 	 * Wrap a new handle (destroying any previously held object)
@@ -38,7 +38,7 @@ public:
 	 * @param NewHandle The new handle to wrap (must not be wrapped by anything else)
 	 * @return A reference to this object that now wraps NewHandle
 	 */
-	FWinHttpHandle& operator=(HINTERNET NewHandle);
+	FCH_WinHttpHandle& operator=(HINTERNET NewHandle);
 
 	/**
 	 * Destroy our current handle and reset our state to holding nothing

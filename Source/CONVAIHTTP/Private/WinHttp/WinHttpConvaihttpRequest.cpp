@@ -14,23 +14,23 @@
 #include "Containers/StringView.h"
 #include "HAL/FileManager.h"
 
-FWinHttpConvaihttpRequest::FWinHttpConvaihttpRequest()
+FCH_WinHttpConvaihttpRequest::FCH_WinHttpConvaihttpRequest()
 {
 
 }
 
-FWinHttpConvaihttpRequest::~FWinHttpConvaihttpRequest()
+FCH_WinHttpConvaihttpRequest::~FCH_WinHttpConvaihttpRequest()
 {
 	// Make sure we either didn't start, or we finished before destructing
 	check(!RequestStartTimeSeconds.IsSet() || RequestFinishTimeSeconds.IsSet());
 }
 
-FString FWinHttpConvaihttpRequest::GetURL() const
+FString FCH_WinHttpConvaihttpRequest::GetURL() const
 {
 	return RequestData.Url;
 }
 
-FString FWinHttpConvaihttpRequest::GetURLParameter(const FString& ParameterName) const
+FString FCH_WinHttpConvaihttpRequest::GetURLParameter(const FString& ParameterName) const
 {
 	FString ReturnValue;
 
@@ -42,13 +42,13 @@ FString FWinHttpConvaihttpRequest::GetURLParameter(const FString& ParameterName)
 	return ReturnValue;
 }
 
-FString FWinHttpConvaihttpRequest::GetHeader(const FString& HeaderName) const
+FString FCH_WinHttpConvaihttpRequest::GetHeader(const FString& HeaderName) const
 {
 	const FString* const ExistingHeader = RequestData.Headers.Find(HeaderName);
 	return ExistingHeader ? *ExistingHeader : FString();
 }
 
-TArray64<FString> FWinHttpConvaihttpRequest::GetAllHeaders() const
+TArray64<FString> FCH_WinHttpConvaihttpRequest::GetAllHeaders() const
 {
 	TArray64<FString> AllHeaders;
 
@@ -60,28 +60,28 @@ TArray64<FString> FWinHttpConvaihttpRequest::GetAllHeaders() const
 	return AllHeaders;
 }
 	
-FString FWinHttpConvaihttpRequest::GetContentType() const
+FString FCH_WinHttpConvaihttpRequest::GetContentType() const
 {
 	return GetHeader(TEXT("Content-Type"));
 }
 
-uint64 FWinHttpConvaihttpRequest::GetContentLength() const
+uint64 FCH_WinHttpConvaihttpRequest::GetContentLength() const
 {
 	return RequestData.Payload.IsValid() ? RequestData.Payload->GetContentLength() : 0;
 }
 
-const TArray64<uint8>& FWinHttpConvaihttpRequest::GetContent() const
+const TArray64<uint8>& FCH_WinHttpConvaihttpRequest::GetContent() const
 {
 	static const TArray64<uint8> EmptyContent;
 	return RequestData.Payload.IsValid() ? RequestData.Payload->GetContent() : EmptyContent;
 }
 
-FString FWinHttpConvaihttpRequest::GetVerb() const
+FString FCH_WinHttpConvaihttpRequest::GetVerb() const
 {
 	return RequestData.Verb;
 }
 
-void FWinHttpConvaihttpRequest::SetVerb(const FString& InVerb)
+void FCH_WinHttpConvaihttpRequest::SetVerb(const FString& InVerb)
 {
 	if (State == EConvaihttpRequestStatus::Processing)
 	{
@@ -92,7 +92,7 @@ void FWinHttpConvaihttpRequest::SetVerb(const FString& InVerb)
 	RequestData.Verb = InVerb.ToUpper();
 }
 
-void FWinHttpConvaihttpRequest::SetURL(const FString& InURL)
+void FCH_WinHttpConvaihttpRequest::SetURL(const FString& InURL)
 {
 	if (State == EConvaihttpRequestStatus::Processing)
 	{
@@ -103,12 +103,12 @@ void FWinHttpConvaihttpRequest::SetURL(const FString& InURL)
 	RequestData.Url = InURL;
 }
 
-void FWinHttpConvaihttpRequest::SetContent(const TArray64<uint8>& ContentPayload)
+void FCH_WinHttpConvaihttpRequest::SetContent(const TArray64<uint8>& ContentPayload)
 {
 	SetContent(CopyTemp(ContentPayload));
 }
 
-void FWinHttpConvaihttpRequest::SetContent(TArray64<uint8>&& ContentPayload)
+void FCH_WinHttpConvaihttpRequest::SetContent(TArray64<uint8>&& ContentPayload)
 {
 	if (State == EConvaihttpRequestStatus::Processing)
 	{
@@ -116,10 +116,10 @@ void FWinHttpConvaihttpRequest::SetContent(TArray64<uint8>&& ContentPayload)
 		return;
 	}
 
-	RequestData.Payload = MakeShared<FRequestPayloadInMemory, ESPMode::ThreadSafe>(MoveTemp(ContentPayload));
+	RequestData.Payload = MakeShared<FCH_RequestPayloadInMemory, ESPMode::ThreadSafe>(MoveTemp(ContentPayload));
 }
 
-void FWinHttpConvaihttpRequest::SetContentAsString(const FString& ContentString)
+void FCH_WinHttpConvaihttpRequest::SetContentAsString(const FString& ContentString)
 {
 	if (State == EConvaihttpRequestStatus::Processing)
 	{
@@ -132,10 +132,10 @@ void FWinHttpConvaihttpRequest::SetContentAsString(const FString& ContentString)
 	TArray64<uint8> Content;
 	Content.Append(reinterpret_cast<const uint8*>(Converter.Get()), Converter.Length());
 
-	RequestData.Payload = MakeShared<FRequestPayloadInMemory, ESPMode::ThreadSafe>(MoveTemp(Content));
+	RequestData.Payload = MakeShared<FCH_RequestPayloadInMemory, ESPMode::ThreadSafe>(MoveTemp(Content));
 }
 
-bool FWinHttpConvaihttpRequest::SetContentAsStreamedFile(const FString& Filename)
+bool FCH_WinHttpConvaihttpRequest::SetContentAsStreamedFile(const FString& Filename)
 {
 	if (State == EConvaihttpRequestStatus::Processing)
 	{
@@ -145,7 +145,7 @@ bool FWinHttpConvaihttpRequest::SetContentAsStreamedFile(const FString& Filename
 
 	if (FArchive* File = IFileManager::Get().CreateFileReader(*Filename))
 	{
-		RequestData.Payload = MakeShared<FRequestPayloadInFileStream, ESPMode::ThreadSafe>(MakeShareable(File));
+		RequestData.Payload = MakeShared<FCH_RequestPayloadInFileStream, ESPMode::ThreadSafe>(MakeShareable(File));
 		return true;
 	}
 	else
@@ -156,7 +156,7 @@ bool FWinHttpConvaihttpRequest::SetContentAsStreamedFile(const FString& Filename
 	}
 }
 
-bool FWinHttpConvaihttpRequest::SetContentFromStream(TSharedRef<FArchive, ESPMode::ThreadSafe> Stream)
+bool FCH_WinHttpConvaihttpRequest::SetContentFromStream(TSharedRef<FArchive, ESPMode::ThreadSafe> Stream)
 {
 	if (State == EConvaihttpRequestStatus::Processing)
 	{
@@ -164,11 +164,11 @@ bool FWinHttpConvaihttpRequest::SetContentFromStream(TSharedRef<FArchive, ESPMod
 		return false;
 	}
 
-	RequestData.Payload = MakeShared<FRequestPayloadInFileStream, ESPMode::ThreadSafe>(Stream);
+	RequestData.Payload = MakeShared<FCH_RequestPayloadInFileStream, ESPMode::ThreadSafe>(Stream);
 	return true;
 }
 
-void FWinHttpConvaihttpRequest::SetHeader(const FString& HeaderName, const FString& HeaderValue)
+void FCH_WinHttpConvaihttpRequest::SetHeader(const FString& HeaderName, const FString& HeaderValue)
 {
 	if (State == EConvaihttpRequestStatus::Processing)
 	{
@@ -185,7 +185,7 @@ void FWinHttpConvaihttpRequest::SetHeader(const FString& HeaderName, const FStri
 	RequestData.Headers.Add(HeaderName, HeaderValue);
 }
 
-void FWinHttpConvaihttpRequest::AppendToHeader(const FString& HeaderName, const FString& AdditionalHeaderValue)
+void FCH_WinHttpConvaihttpRequest::AppendToHeader(const FString& HeaderName, const FString& AdditionalHeaderValue)
 {
 	if (State == EConvaihttpRequestStatus::Processing)
 	{
@@ -209,9 +209,9 @@ void FWinHttpConvaihttpRequest::AppendToHeader(const FString& HeaderName, const 
 	}
 }
 
-bool FWinHttpConvaihttpRequest::ProcessRequest()
+bool FCH_WinHttpConvaihttpRequest::ProcessRequest()
 {
-	UE_LOG(LogConvaihttp, Verbose, TEXT("FWinHttpConvaihttpRequest::ProcessRequest() FWinHttpConvaihttpRequest=[%p]"), this);
+	UE_LOG(LogConvaihttp, Verbose, TEXT("FCH_WinHttpConvaihttpRequest::ProcessRequest() FCH_WinHttpConvaihttpRequest=[%p]"), this);
 
 	if (State == EConvaihttpRequestStatus::Processing)
 	{
@@ -219,7 +219,7 @@ bool FWinHttpConvaihttpRequest::ProcessRequest()
 		return false;
 	}
 
-	FWinHttpConvaihttpManager* ConvaihttpManager = FWinHttpConvaihttpManager::GetManager();
+	FCH_WinHttpConvaihttpManager* ConvaihttpManager = FCH_WinHttpConvaihttpManager::GetManager();
 	if (!ConvaihttpManager)
 	{
 		UE_LOG(LogConvaihttp, Warning, TEXT("Attempted to start request with no CONVAIHTTP manager"));
@@ -236,11 +236,11 @@ bool FWinHttpConvaihttpRequest::ProcessRequest()
 	CompletionStatus = EConvaihttpRequestStatus::Processing;
 	State = EConvaihttpRequestStatus::Processing;
 
-	TSharedRef<FWinHttpConvaihttpRequest, ESPMode::ThreadSafe> LocalStrongThis = StaticCastSharedRef<FWinHttpConvaihttpRequest>(AsShared());
-	ConvaihttpManager->QuerySessionForUrl(RequestData.Url, FWinHttpQuerySessionComplete::CreateLambda([LocalWeakThis = TWeakPtr<FWinHttpConvaihttpRequest, ESPMode::ThreadSafe>(LocalStrongThis)](FWinHttpSession* SessionPtr)
+	TSharedRef<FCH_WinHttpConvaihttpRequest, ESPMode::ThreadSafe> LocalStrongThis = StaticCastSharedRef<FCH_WinHttpConvaihttpRequest>(AsShared());
+	ConvaihttpManager->QuerySessionForUrl(RequestData.Url, FCH_WinHttpQuerySessionComplete::CreateLambda([LocalWeakThis = TWeakPtr<FCH_WinHttpConvaihttpRequest, ESPMode::ThreadSafe>(LocalStrongThis)](FCH_WinHttpSession* SessionPtr)
 	{
 		// Validate state
-		TSharedPtr<FWinHttpConvaihttpRequest, ESPMode::ThreadSafe> StrongThis = LocalWeakThis.Pin();
+		TSharedPtr<FCH_WinHttpConvaihttpRequest, ESPMode::ThreadSafe> StrongThis = LocalWeakThis.Pin();
 		if (!StrongThis.IsValid())
 		{
 			// We went away
@@ -259,10 +259,10 @@ bool FWinHttpConvaihttpRequest::ProcessRequest()
 			return;
 		}
 
-		FWinHttpConvaihttpRequestData& LocalRequestData = StrongThis->RequestData;
+		FCH_WinHttpConvaihttpRequestData& LocalRequestData = StrongThis->RequestData;
 
 		// Create connection object
-		TSharedPtr<FWinHttpConnectionConvaihttp, ESPMode::ThreadSafe> LocalConnection = FWinHttpConnectionConvaihttp::CreateConvaihttpConnection(*SessionPtr, LocalRequestData.Verb, LocalRequestData.Url, LocalRequestData.Headers, LocalRequestData.Payload);
+		TSharedPtr<FCH_WinHttpConnectionConvaihttp, ESPMode::ThreadSafe> LocalConnection = FCH_WinHttpConnectionConvaihttp::CreateConvaihttpConnection(*SessionPtr, LocalRequestData.Verb, LocalRequestData.Url, LocalRequestData.Headers, LocalRequestData.Payload);
 		if (!LocalConnection.IsValid())
 		{
 			UE_LOG(LogConvaihttp, Warning, TEXT("Unable to create WinHttp Connection, failing request"));
@@ -271,10 +271,10 @@ bool FWinHttpConvaihttpRequest::ProcessRequest()
 		}
 
 		// Bind listeners
-		TSharedRef<FWinHttpConvaihttpRequest, ESPMode::ThreadSafe> StrongThisRef = StrongThis.ToSharedRef();
-		LocalConnection->SetDataTransferredHandler(FWinHttpConnectionConvaihttpOnDataTransferred::CreateThreadSafeSP(StrongThisRef, &FWinHttpConvaihttpRequest::HandleDataTransferred));
-		LocalConnection->SetHeaderReceivedHandler(FWinHttpConnectionConvaihttpOnHeaderReceived::CreateThreadSafeSP(StrongThisRef, &FWinHttpConvaihttpRequest::HandleHeaderReceived));
-		LocalConnection->SetRequestCompletedHandler(FWinHttpConnectionConvaihttpOnRequestComplete::CreateThreadSafeSP(StrongThisRef, &FWinHttpConvaihttpRequest::HandleRequestComplete));
+		TSharedRef<FCH_WinHttpConvaihttpRequest, ESPMode::ThreadSafe> StrongThisRef = StrongThis.ToSharedRef();
+		LocalConnection->SetDataTransferredHandler(FCH_WinHttpConnectionConvaihttpOnDataTransferred::CreateThreadSafeSP(StrongThisRef, &FCH_WinHttpConvaihttpRequest::HandleDataTransferred));
+		LocalConnection->SetHeaderReceivedHandler(FCH_WinHttpConnectionConvaihttpOnHeaderReceived::CreateThreadSafeSP(StrongThisRef, &FCH_WinHttpConvaihttpRequest::HandleHeaderReceived));
+		LocalConnection->SetRequestCompletedHandler(FCH_WinHttpConnectionConvaihttpOnRequestComplete::CreateThreadSafeSP(StrongThisRef, &FCH_WinHttpConvaihttpRequest::HandleRequestComplete));
 
 		// Start request!
 		StrongThisRef->RequestStartTimeSeconds = FPlatformTime::Seconds();
@@ -294,9 +294,9 @@ bool FWinHttpConvaihttpRequest::ProcessRequest()
 	return true;
 }
 
-void FWinHttpConvaihttpRequest::CancelRequest()
+void FCH_WinHttpConvaihttpRequest::CancelRequest()
 {
-	UE_LOG(LogConvaihttp, Log, TEXT("FWinHttpConvaihttpRequest::CancelRequest() FWinHttpConvaihttpRequest=[%p]"), this);
+	UE_LOG(LogConvaihttp, Log, TEXT("FCH_WinHttpConvaihttpRequest::CancelRequest() FCH_WinHttpConvaihttpRequest=[%p]"), this);
 
 	if (EConvaihttpRequestStatus::IsFinished(State))
 	{
@@ -320,7 +320,7 @@ void FWinHttpConvaihttpRequest::CancelRequest()
 	else if (!IsInGameThread())
 	{
 		// Always finish on the game thread
-		FConvaihttpModule::Get().GetConvaihttpManager().AddGameThreadTask([StrongThis = StaticCastSharedRef<FWinHttpConvaihttpRequest>(AsShared())]()
+		FConvaihttpModule::Get().GetConvaihttpManager().AddGameThreadTask([StrongThis = StaticCastSharedRef<FCH_WinHttpConvaihttpRequest>(AsShared())]()
 		{
 			StrongThis->FinishRequest();
 		});
@@ -331,17 +331,17 @@ void FWinHttpConvaihttpRequest::CancelRequest()
 	}
 }
 
-EConvaihttpRequestStatus::Type FWinHttpConvaihttpRequest::GetStatus() const
+EConvaihttpRequestStatus::Type FCH_WinHttpConvaihttpRequest::GetStatus() const
 {
 	return CompletionStatus;
 }
 
-const FConvaihttpResponsePtr FWinHttpConvaihttpRequest::GetResponse() const
+const FConvaihttpResponsePtr FCH_WinHttpConvaihttpRequest::GetResponse() const
 {
 	return Response;
 }
 
-void FWinHttpConvaihttpRequest::Tick(float DeltaSeconds)
+void FCH_WinHttpConvaihttpRequest::Tick(float DeltaSeconds)
 {
 	if (Connection.IsValid())
 	{
@@ -350,7 +350,7 @@ void FWinHttpConvaihttpRequest::Tick(float DeltaSeconds)
 	}
 }
 
-float FWinHttpConvaihttpRequest::GetElapsedTime() const
+float FCH_WinHttpConvaihttpRequest::GetElapsedTime() const
 {
 	if (!RequestStartTimeSeconds.IsSet())
 	{
@@ -368,13 +368,13 @@ float FWinHttpConvaihttpRequest::GetElapsedTime() const
 	return FPlatformTime::Seconds() - RequestStartTimeSeconds.GetValue();
 }
 
-bool FWinHttpConvaihttpRequest::StartThreadedRequest()
+bool FCH_WinHttpConvaihttpRequest::StartThreadedRequest()
 {
 	// No-op, our request is already started
 	return true;
 }
 
-bool FWinHttpConvaihttpRequest::IsThreadedRequestComplete()
+bool FCH_WinHttpConvaihttpRequest::IsThreadedRequestComplete()
 {
 	if (bRequestCancelled)
 	{
@@ -383,9 +383,9 @@ bool FWinHttpConvaihttpRequest::IsThreadedRequestComplete()
 	return EConvaihttpRequestStatus::IsFinished(State);
 }
 
-void FWinHttpConvaihttpRequest::TickThreadedRequest(float DeltaSeconds)
+void FCH_WinHttpConvaihttpRequest::TickThreadedRequest(float DeltaSeconds)
 {
-	TSharedPtr<FWinHttpConnectionConvaihttp, ESPMode::ThreadSafe> LocalConnection = Connection;
+	TSharedPtr<FCH_WinHttpConnectionConvaihttp, ESPMode::ThreadSafe> LocalConnection = Connection;
 	if (LocalConnection.IsValid())
 	{
 		LocalConnection->PumpStates();
@@ -393,7 +393,7 @@ void FWinHttpConvaihttpRequest::TickThreadedRequest(float DeltaSeconds)
 	}
 }
 
-void FWinHttpConvaihttpRequest::OnWinHttpRequestComplete()
+void FCH_WinHttpConvaihttpRequest::OnWinHttpRequestComplete()
 {
 	if (RequestFinishTimeSeconds.IsSet())
 	{
@@ -409,7 +409,7 @@ void FWinHttpConvaihttpRequest::OnWinHttpRequestComplete()
 	}
 }
 
-void FWinHttpConvaihttpRequest::FinishRequest()
+void FCH_WinHttpConvaihttpRequest::FinishRequest()
 {
 	check(IsInGameThread());
 	check(IsThreadedRequestComplete());
@@ -436,7 +436,7 @@ void FWinHttpConvaihttpRequest::FinishRequest()
 	OnProcessRequestComplete().ExecuteIfBound(KeepAlive, Response, Response.IsValid());
 }
 
-void FWinHttpConvaihttpRequest::HandleDataTransferred(int32 BytesSent, int32 BytesReceived)
+void FCH_WinHttpConvaihttpRequest::HandleDataTransferred(int32 BytesSent, int32 BytesReceived)
 {
 	check(IsInGameThread());
 
@@ -453,7 +453,7 @@ void FWinHttpConvaihttpRequest::HandleDataTransferred(int32 BytesSent, int32 Byt
 	}
 }
 
-void FWinHttpConvaihttpRequest::HandleHeaderReceived(const FString& HeaderKey, const FString& HeaderValue)
+void FCH_WinHttpConvaihttpRequest::HandleHeaderReceived(const FString& HeaderKey, const FString& HeaderValue)
 {
 	check(IsInGameThread());
 
@@ -463,14 +463,14 @@ void FWinHttpConvaihttpRequest::HandleHeaderReceived(const FString& HeaderKey, c
 	}
 	else if (Connection.IsValid())
 	{
-		Response = MakeShared<FWinHttpConvaihttpResponse, ESPMode::ThreadSafe>(RequestData.Url, Connection->GetResponseCode(), CopyTemp(Connection->GetHeadersReceived()), TArray64<uint8>());
+		Response = MakeShared<FCH_WinHttpConvaihttpResponse, ESPMode::ThreadSafe>(RequestData.Url, Connection->GetResponseCode(), CopyTemp(Connection->GetHeadersReceived()), TArray64<uint8>());
 	}
 
 	TSharedRef<IConvaihttpRequest, ESPMode::ThreadSafe> KeepAlive = AsShared();
 	OnHeaderReceived().ExecuteIfBound(AsShared(), HeaderKey, HeaderValue);
 }
 
-void FWinHttpConvaihttpRequest::HandleRequestComplete(EConvaihttpRequestStatus::Type RequestCompletionStatus)
+void FCH_WinHttpConvaihttpRequest::HandleRequestComplete(EConvaihttpRequestStatus::Type RequestCompletionStatus)
 {
 	check(IsInGameThread());
 	check(EConvaihttpRequestStatus::IsFinished(RequestCompletionStatus));
@@ -485,7 +485,7 @@ void FWinHttpConvaihttpRequest::HandleRequestComplete(EConvaihttpRequestStatus::
 	OnWinHttpRequestComplete();
 }
 
-void FWinHttpConvaihttpRequest::UpdateResponseBody(bool bForceResponseExist)
+void FCH_WinHttpConvaihttpRequest::UpdateResponseBody(bool bForceResponseExist)
 {
 	if (Connection.IsValid())
 	{
@@ -501,7 +501,7 @@ void FWinHttpConvaihttpRequest::UpdateResponseBody(bool bForceResponseExist)
 			}
 			else
 			{
-				Response = MakeShared<FWinHttpConvaihttpResponse, ESPMode::ThreadSafe>(RequestData.Url, Connection->GetResponseCode(), CopyTemp(Connection->GetHeadersReceived()), MoveTemp(NewChunk));
+				Response = MakeShared<FCH_WinHttpConvaihttpResponse, ESPMode::ThreadSafe>(RequestData.Url, Connection->GetResponseCode(), CopyTemp(Connection->GetHeadersReceived()), MoveTemp(NewChunk));
 			}
 		}
 	}

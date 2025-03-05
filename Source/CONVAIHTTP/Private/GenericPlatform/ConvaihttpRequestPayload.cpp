@@ -5,7 +5,7 @@
 #include "GenericPlatform/GenericPlatformConvaihttp.h"
 #include "HAL/PlatformFileManager.h"
 
-bool FGenericPlatformConvaihttp::IsURLEncoded(const TArray64<uint8>& Payload)
+bool FGenericPlatformConvaihttp::CH_IsURLEncoded(const TArray64<uint8>& Payload)
 {
 	static char AllowedChars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~";
 	static bool bTableFilled = false;
@@ -33,39 +33,39 @@ bool FGenericPlatformConvaihttp::IsURLEncoded(const TArray64<uint8>& Payload)
 	return true;
 }
 
-FRequestPayloadInFileStream::FRequestPayloadInFileStream(TSharedRef<FArchive, ESPMode::ThreadSafe> InFile) : File(InFile)
+FCH_RequestPayloadInFileStream::FCH_RequestPayloadInFileStream(TSharedRef<FArchive, ESPMode::ThreadSafe> InFile) : File(InFile)
 {
 }
 
-FRequestPayloadInFileStream::~FRequestPayloadInFileStream()
+FCH_RequestPayloadInFileStream::~FCH_RequestPayloadInFileStream()
 {
 }
 
-uint64 FRequestPayloadInFileStream::GetContentLength() const
+uint64 FCH_RequestPayloadInFileStream::GetContentLength() const
 {
 	return static_cast<int32>(File->TotalSize());
 }
 
-const TArray64<uint8>& FRequestPayloadInFileStream::GetContent() const
+const TArray64<uint8>& FCH_RequestPayloadInFileStream::GetContent() const
 {
 	ensureMsgf(false, TEXT("GetContent() on a streaming request payload is not allowed"));
 	static const TArray64<uint8> NotSupported;
 	return NotSupported;
 }
 
-bool FRequestPayloadInFileStream::IsURLEncoded() const
+bool FCH_RequestPayloadInFileStream::CH_IsURLEncoded() const
 {
 	// Assume that files are not URL encoded, because they probably aren't.
 	// This implies that POST requests with streamed files will need the caller to set a Content-Type.
 	return false;
 }
 
-size_t FRequestPayloadInFileStream::FillOutputBuffer(void* OutputBuffer, size_t MaxOutputBufferSize, size_t SizeAlreadySent)
+size_t FCH_RequestPayloadInFileStream::FillOutputBuffer(void* OutputBuffer, size_t MaxOutputBufferSize, size_t SizeAlreadySent)
 {
 	return FillOutputBuffer(TArray64<uint8>(static_cast<uint8*>(OutputBuffer), MaxOutputBufferSize), SizeAlreadySent);
 }
 
-size_t FRequestPayloadInFileStream::FillOutputBuffer(TArray64<uint8> OutputBuffer, size_t SizeAlreadySent)
+size_t FCH_RequestPayloadInFileStream::FillOutputBuffer(TArray64<uint8> OutputBuffer, size_t SizeAlreadySent)
 {
 	const size_t ContentLength = static_cast<size_t>(GetContentLength());
 	check(SizeAlreadySent <= ContentLength);
@@ -82,34 +82,34 @@ size_t FRequestPayloadInFileStream::FillOutputBuffer(TArray64<uint8> OutputBuffe
 	return SizeToSendThisTime;
 }
 
-FRequestPayloadInMemory::FRequestPayloadInMemory(const TArray64<uint8>& Array) : Buffer(Array)
+FCH_RequestPayloadInMemory::FCH_RequestPayloadInMemory(const TArray64<uint8>& Array) : Buffer(Array)
 {
 }
 
-FRequestPayloadInMemory::FRequestPayloadInMemory(TArray64<uint8>&& Array) : Buffer(MoveTemp(Array))
+FCH_RequestPayloadInMemory::FCH_RequestPayloadInMemory(TArray64<uint8>&& Array) : Buffer(MoveTemp(Array))
 {
 }
 
-FRequestPayloadInMemory::~FRequestPayloadInMemory()
+FCH_RequestPayloadInMemory::~FCH_RequestPayloadInMemory()
 {
 }
 
-uint64 FRequestPayloadInMemory::GetContentLength() const
+uint64 FCH_RequestPayloadInMemory::GetContentLength() const
 {
 	return Buffer.Num();
 }
 
-const TArray64<uint8>& FRequestPayloadInMemory::GetContent() const
+const TArray64<uint8>& FCH_RequestPayloadInMemory::GetContent() const
 {
 	return Buffer;
 }
 
-bool FRequestPayloadInMemory::IsURLEncoded() const
+bool FCH_RequestPayloadInMemory::CH_IsURLEncoded() const
 {
-	return FGenericPlatformConvaihttp::IsURLEncoded(Buffer);
+	return FGenericPlatformConvaihttp::CH_IsURLEncoded(Buffer);
 }
 
-size_t FRequestPayloadInMemory::FillOutputBuffer(void* OutputBuffer, size_t MaxOutputBufferSize, size_t SizeAlreadySent)
+size_t FCH_RequestPayloadInMemory::FillOutputBuffer(void* OutputBuffer, size_t MaxOutputBufferSize, size_t SizeAlreadySent)
 {
 	const size_t ContentLength = static_cast<size_t>(Buffer.Num());
 	check(SizeAlreadySent <= ContentLength);
@@ -124,7 +124,7 @@ size_t FRequestPayloadInMemory::FillOutputBuffer(void* OutputBuffer, size_t MaxO
 	//return FillOutputBuffer(TArray64<uint8>(static_cast<uint8*>(OutputBuffer), MaxOutputBufferSize), SizeAlreadySent);
 }
 
-size_t FRequestPayloadInMemory::FillOutputBuffer(TArray64<uint8> OutputBuffer, size_t SizeAlreadySent)
+size_t FCH_RequestPayloadInMemory::FillOutputBuffer(TArray64<uint8> OutputBuffer, size_t SizeAlreadySent)
 {
 	const size_t ContentLength = static_cast<size_t>(Buffer.Num());
 	check(SizeAlreadySent <= ContentLength);

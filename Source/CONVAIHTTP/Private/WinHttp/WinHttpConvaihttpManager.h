@@ -7,20 +7,20 @@
 #include "CoreMinimal.h"
 #include "ConvaihttpManager.h"
 
-class FWinHttpSession;
+class FCH_WinHttpSession;
 
-DECLARE_DELEGATE_OneParam(FWinHttpQuerySessionComplete, FWinHttpSession* /*ConvaihttpSessionPtr*/);
+DECLARE_DELEGATE_OneParam(FCH_WinHttpQuerySessionComplete, FCH_WinHttpSession* /*ConvaihttpSessionPtr*/);
 
 class IWinHttpConnection;
 
-class CONVAIHTTP_API FWinHttpConvaihttpManager
+class CONVAIHTTP_API FCH_WinHttpConvaihttpManager
 	: public FConvaihttpManager
 {
 public:
-	static FWinHttpConvaihttpManager* GetManager();
+	static FCH_WinHttpConvaihttpManager* GetManager();
 
-	FWinHttpConvaihttpManager();
-	virtual ~FWinHttpConvaihttpManager();
+	FCH_WinHttpConvaihttpManager();
+	virtual ~FCH_WinHttpConvaihttpManager();
 
 	/**
 	 * Asynchronously finds an existing WinHttp session for the provided URL, or creates a new one for it.
@@ -28,7 +28,7 @@ public:
 	 * @param Url The URL to find or create a WinHttp session for
 	 * @param Delegate The delegate that is called with the WinHttp session pointer if successful, or null otherwise
 	 */
-	virtual void QuerySessionForUrl(const FString& Url, FWinHttpQuerySessionComplete&& Delegate);
+	virtual void QuerySessionForUrl(const FString& Url, FCH_WinHttpQuerySessionComplete&& Delegate);
 
 	/**
 	 * Validate the provided connection before we start sending our request.
@@ -64,13 +64,13 @@ public:
 	virtual void HandleApplicationResuming();
 
 protected:
-	FWinHttpSession* FindOrCreateSession(const uint32 SecurityProtocols);
+	FCH_WinHttpSession* FindOrCreateSession(const uint32 SecurityProtocols);
 
 protected:
 	bool bPlatformForcesSecureConnections = false;
 
 	/** Map of Security Flags to WinHttp Session objects */
-	TMap<uint32, TUniquePtr<FWinHttpSession>> ActiveSessions;
+	TMap<uint32, TUniquePtr<FCH_WinHttpSession>> ActiveSessions;
 };
 
 #endif // WITH_WINHTTP

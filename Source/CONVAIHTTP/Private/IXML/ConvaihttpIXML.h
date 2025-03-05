@@ -70,7 +70,7 @@ private:
 
 private:
 	TMap<FString, FString>				Headers;
-	TUniquePtr<FRequestPayload>			Payload;
+	TUniquePtr<FCH_RequestPayload>			Payload;
 	FString								URL;
 	FString								Verb;
 

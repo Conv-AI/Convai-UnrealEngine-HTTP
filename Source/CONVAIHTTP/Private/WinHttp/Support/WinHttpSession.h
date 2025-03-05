@@ -11,21 +11,21 @@ class IWinHttpConnection;
 
 using HINTERNET = void*;
 
-class CONVAIHTTP_API FWinHttpSession
+class CONVAIHTTP_API FCH_WinHttpSession
 {
 public:
 	/**
 	 * Construct a new WinHttp session with the specified security protocols flags
 	 */
-	FWinHttpSession(const uint32 SecurityProtocolFlags, const bool bForceSecureConnections);
+	FCH_WinHttpSession(const uint32 SecurityProtocolFlags, const bool bForceSecureConnections);
 
 	/**
-	 * FWinHttpSession is move-only
+	 * FCH_WinHttpSession is move-only
 	 */
-	FWinHttpSession(const FWinHttpSession& Other) = delete;
-	FWinHttpSession(FWinHttpSession&& Other) = default;
-	FWinHttpSession& operator=(const FWinHttpSession& Other) = delete;
-	FWinHttpSession& operator=(FWinHttpSession&& Other) = default;
+	FCH_WinHttpSession(const FCH_WinHttpSession& Other) = delete;
+	FCH_WinHttpSession(FCH_WinHttpSession&& Other) = default;
+	FCH_WinHttpSession& operator=(const FCH_WinHttpSession& Other) = delete;
+	FCH_WinHttpSession& operator=(FCH_WinHttpSession&& Other) = default;
 
 	/**
 	 * Did this session initialize successfully?
@@ -48,7 +48,7 @@ public:
 
 private:
 	/** The handle for our session that we are wrapping */
-	FWinHttpHandle SessionHandle;
+	FCH_WinHttpHandle SessionHandle;
 	/** Should we force connections to be secure? */
 	bool bForceSecureConnections = false;
 };

@@ -21,68 +21,68 @@
 void CALLBACK UE_WinHttpStatusConvaihttpCallback(HINTERNET hInternet, DWORD_PTR dwContext, DWORD dwInternetStatus, LPVOID lpvStatusInformation, DWORD dwStatusInformationLength)
 {
 	const EWinHttpCallbackStatus Status = static_cast<EWinHttpCallbackStatus>(dwInternetStatus);
-	if (!IsValidStatus(Status))
+	if (!CH_IsValidStatus(Status))
 	{
-		UE_LOG(LogWinHttp, Warning, TEXT("Received unknown WinHttp Status %lu"), dwInternetStatus);
+		UE_LOG(LogWinConvaiHttp, Warning, TEXT("Received unknown WinHttp Status %lu"), dwInternetStatus);
 		return;
 	}
 
 	// If there is a dwContext, this is a normal CONVAIHTTP request
 	if (dwContext)
 	{
-		FWinHttpConnectionConvaihttp* const RequestContext = reinterpret_cast<FWinHttpConnectionConvaihttp*>(dwContext);
+		FCH_WinHttpConnectionConvaihttp* const RequestContext = reinterpret_cast<FCH_WinHttpConnectionConvaihttp*>(dwContext);
 		RequestContext->HandleConvaihttpStatusCallback(hInternet, Status, lpvStatusInformation, dwStatusInformationLength);
 	}
 }
 
-TSharedPtr<FWinHttpConnectionConvaihttp, ESPMode::ThreadSafe> FWinHttpConnectionConvaihttp::CreateConvaihttpConnection(
-	FWinHttpSession& InSession,
+TSharedPtr<FCH_WinHttpConnectionConvaihttp, ESPMode::ThreadSafe> FCH_WinHttpConnectionConvaihttp::CreateConvaihttpConnection(
+	FCH_WinHttpSession& InSession,
 	const FString& InVerb,
 	const FString& InUrl,
 	const TMap<FString, FString>& InHeaders,
-	const TSharedPtr<FRequestPayload, ESPMode::ThreadSafe>& InPayload)
+	const TSharedPtr<FCH_RequestPayload, ESPMode::ThreadSafe>& InPayload)
 {
 	if (!InSession.IsValid())
 	{
-		UE_LOG(LogWinHttp, Warning, TEXT("Attempted to create a WinHttp Request with no active session"));
+		UE_LOG(LogWinConvaiHttp, Warning, TEXT("Attempted to create a WinHttp Request with no active session"));
 		return nullptr;
 	}
 
 	if (InVerb.IsEmpty())
 	{
-		UE_LOG(LogWinHttp, Warning, TEXT("Attempted to create a WinHttp Request with an empty verb"));
+		UE_LOG(LogWinConvaiHttp, Warning, TEXT("Attempted to create a WinHttp Request with an empty verb"));
 		return nullptr;
 	}
 	
 	if (InUrl.IsEmpty())
 	{
-		UE_LOG(LogWinHttp, Warning, TEXT("Attempted to create a WinHttp Request with an empty url"));
+		UE_LOG(LogWinConvaiHttp, Warning, TEXT("Attempted to create a WinHttp Request with an empty url"));
 		return nullptr;
 	}
 
 	const bool bIsSecure = FGenericPlatformConvaihttp::IsSecureProtocol(InUrl).Get(false);
 	if (!bIsSecure && InSession.AreOnlySecureConnectionsAllowed())
 	{
-		UE_LOG(LogWinHttp, Warning, TEXT("Attempted to create an insecure WinHttp Request which is disabled on this platform"));
+		UE_LOG(LogWinConvaiHttp, Warning, TEXT("Attempted to create an insecure WinHttp Request which is disabled on this platform"));
 		return nullptr;
 	}
 
 	const FString Domain = FGenericPlatformConvaihttp::GetUrlDomain(InUrl);
 	if (Domain.IsEmpty())
 	{
-		UE_LOG(LogWinHttp, Warning, TEXT("Attempted to create a WinHttp Request with an unset domain"));
+		UE_LOG(LogWinConvaiHttp, Warning, TEXT("Attempted to create a WinHttp Request with an unset domain"));
 		return nullptr;
 	}
 
 	const FString PathAndQuery = FGenericPlatformConvaihttp::GetUrlPath(InUrl, true, false);
 	if (PathAndQuery.IsEmpty())
 	{
-		UE_LOG(LogWinHttp, Warning, TEXT("Attempted to create a WinHttp Request with an unset path"));
+		UE_LOG(LogWinConvaiHttp, Warning, TEXT("Attempted to create a WinHttp Request with an unset path"));
 		return nullptr;
 	}
 	
 	TOptional<uint16> Port = FGenericPlatformConvaihttp::GetUrlPort(InUrl);
-	TSharedRef<FWinHttpConnectionConvaihttp, ESPMode::ThreadSafe> Result = MakeShareable(new FWinHttpConnectionConvaihttp(InSession, InVerb, InUrl, bIsSecure, Domain, Port, PathAndQuery, InHeaders, InPayload));
+	TSharedRef<FCH_WinHttpConnectionConvaihttp, ESPMode::ThreadSafe> Result = MakeShareable(new FCH_WinHttpConnectionConvaihttp(InSession, InVerb, InUrl, bIsSecure, Domain, Port, PathAndQuery, InHeaders, InPayload));
 	if (!Result->IsValid())
 	{
 		return nullptr;
@@ -91,52 +91,52 @@ TSharedPtr<FWinHttpConnectionConvaihttp, ESPMode::ThreadSafe> FWinHttpConnection
 	return Result;
 }
 
-FWinHttpConnectionConvaihttp::~FWinHttpConnectionConvaihttp()
+FCH_WinHttpConnectionConvaihttp::~FCH_WinHttpConnectionConvaihttp()
 {
-	UE_LOG(LogWinHttp, Verbose, TEXT("WinHttp Convaihttp[%p]: Destructing WinHttp request"), this);
+	UE_LOG(LogWinConvaiHttp, Verbose, TEXT("WinHttp Convaihttp[%p]: Destructing WinHttp request"), this);
 
 	RequestHandle.Reset();
 	ConnectionHandle.Reset();
 
-	if (FWinHttpConvaihttpManager* const ConvaihttpManager = FWinHttpConvaihttpManager::GetManager())
+	if (FCH_WinHttpConvaihttpManager* const ConvaihttpManager = FCH_WinHttpConvaihttpManager::GetManager())
 	{
 		ConvaihttpManager->ReleaseRequestResources(*this);
 	}
 }
 
-bool FWinHttpConnectionConvaihttp::IsValid() const
+bool FCH_WinHttpConnectionConvaihttp::IsValid() const
 {
 	FScopeLock ScopeLock(&SyncObject);
 	return ConnectionHandle.IsValid() && RequestHandle.IsValid();
 }
 
-const FString& FWinHttpConnectionConvaihttp::GetRequestUrl() const
+const FString& FCH_WinHttpConnectionConvaihttp::GetRequestUrl() const
 {
 	// No lock because this data is constant for the entire request
 	return RequestUrl;
 }
 
-void* FWinHttpConnectionConvaihttp::GetHandle()
+void* FCH_WinHttpConnectionConvaihttp::GetHandle()
 {
 	// No lock, as this is to be called while inside a callback (which gives us a lock)
 	return RequestHandle.Get();
 }
 
-bool FWinHttpConnectionConvaihttp::StartRequest()
+bool FCH_WinHttpConnectionConvaihttp::StartRequest()
 {
 	FScopeLock ScopeLock(&SyncObject);
 	if (CurrentAction != EState::WaitToStart)
 	{
-		UE_LOG(LogWinHttp, Warning, TEXT("WinHttp Convaihttp[%p]: Attempted to start a request that has already started"), this);
+		UE_LOG(LogWinConvaiHttp, Warning, TEXT("WinHttp Convaihttp[%p]: Attempted to start a request that has already started"), this);
 		return false;
 	}
 
-	KeepAlive = StaticCastSharedRef<FWinHttpConnectionConvaihttp>(AsShared());
+	KeepAlive = StaticCastSharedRef<FCH_WinHttpConnectionConvaihttp>(AsShared());
 
 	if (WinHttpSetStatusCallback(RequestHandle.Get(), UE_WinHttpStatusConvaihttpCallback, WINHTTP_CALLBACK_FLAG_ALL_NOTIFICATIONS, 0) == WINHTTP_INVALID_STATUS_CALLBACK)
 	{
 		const DWORD ErrorCode = GetLastError();
-		FWinHttpErrorHelper::LogWinHttpSetStatusCallbackFailure(ErrorCode);
+		FCH_WinHttpErrorHelper::LogWinConvaiHttpSetStatusCallbackFailure(ErrorCode);
 		KeepAlive.Reset();
 		return false;
 	}
@@ -159,7 +159,7 @@ bool FWinHttpConnectionConvaihttp::StartRequest()
 		if (!WinHttpSetStatusCallback(RequestHandle.Get(), nullptr, WINHTTP_CALLBACK_FLAG_ALL_NOTIFICATIONS, 0))
 		{
 			const DWORD ErrorCode = GetLastError();
-			FWinHttpErrorHelper::LogWinHttpSetStatusCallbackFailure(ErrorCode);
+			FCH_WinHttpErrorHelper::LogWinConvaiHttpSetStatusCallbackFailure(ErrorCode);
 		}
 
 		FinalState.Reset();
@@ -170,36 +170,36 @@ bool FWinHttpConnectionConvaihttp::StartRequest()
 	return true;
 }
 
-bool FWinHttpConnectionConvaihttp::CancelRequest()
+bool FCH_WinHttpConnectionConvaihttp::CancelRequest()
 {
 	FScopeLock ScopeLock(&SyncObject);
 
 	if (bRequestCancelled)
 	{
-		UE_LOG(LogWinHttp, Verbose, TEXT("WinHttp Convaihttp[%p]: Attempting to cancel an already cancelling WinHttp Request"), this);
+		UE_LOG(LogWinConvaiHttp, Verbose, TEXT("WinHttp Convaihttp[%p]: Attempting to cancel an already cancelling WinHttp Request"), this);
 		return true;
 	}
 	
 	if (FinalState.IsSet())
 	{
-		UE_LOG(LogWinHttp, Verbose, TEXT("WinHttp Convaihttp[%p]: Attempted to cancel finished WinHttp Request"), this);
+		UE_LOG(LogWinConvaiHttp, Verbose, TEXT("WinHttp Convaihttp[%p]: Attempted to cancel finished WinHttp Request"), this);
 		return false;
 	}
 
-	UE_LOG(LogWinHttp, Verbose, TEXT("WinHttp Convaihttp[%p]: Cancelling WinHttp Request"), this);
+	UE_LOG(LogWinConvaiHttp, Verbose, TEXT("WinHttp Convaihttp[%p]: Cancelling WinHttp Request"), this);
 	bRequestCancelled = true;
 	
 	FinishRequest(EConvaihttpRequestStatus::Failed);
 	return true;
 }
 
-bool FWinHttpConnectionConvaihttp::IsComplete() const
+bool FCH_WinHttpConnectionConvaihttp::IsComplete() const
 {
 	FScopeLock ScopeLock(&SyncObject);
 	return FinalState.IsSet();
 }
 
-void FWinHttpConnectionConvaihttp::PumpMessages()
+void FCH_WinHttpConnectionConvaihttp::PumpMessages()
 {
 	// Don't lock our object if we don't have any events ready (this is an optimization to skip locking on game thread every tick if there's no events waiting)
 	if (!bHasPendingDelegate)
@@ -276,7 +276,7 @@ void FWinHttpConnectionConvaihttp::PumpMessages()
 	// Send our completion callback if the request is now finished
 	if (OnRequestCompleteHandler.IsBound() && FinalState.IsSet())
 	{
-		FWinHttpConnectionConvaihttpOnRequestComplete LocalCompleteHandler = MoveTemp(OnRequestCompleteHandler);
+		FCH_WinHttpConnectionConvaihttpOnRequestComplete LocalCompleteHandler = MoveTemp(OnRequestCompleteHandler);
 		OnRequestCompleteHandler.Unbind();
 
 		LocalCompleteHandler.ExecuteIfBound(FinalState.GetValue());
@@ -288,7 +288,7 @@ void FWinHttpConnectionConvaihttp::PumpMessages()
 	}
 }
 
-void FWinHttpConnectionConvaihttp::PumpStates()
+void FCH_WinHttpConnectionConvaihttp::PumpStates()
 {
 	FScopeLock ScopeLock(&SyncObject);
 
@@ -375,44 +375,44 @@ void FWinHttpConnectionConvaihttp::PumpStates()
 	}
 }
 
-void FWinHttpConnectionConvaihttp::SetDataTransferredHandler(FWinHttpConnectionConvaihttpOnDataTransferred&& Handler)
+void FCH_WinHttpConnectionConvaihttp::SetDataTransferredHandler(FCH_WinHttpConnectionConvaihttpOnDataTransferred&& Handler)
 {
 	FScopeLock ScopeLock(&SyncObject);
 	if (CurrentAction != EState::WaitToStart)
 	{
-		UE_LOG(LogWinHttp, Verbose, TEXT("WinHttp Convaihttp[%p]: Attempting to set the Data Transfer handler on a request that has already started"), this);
+		UE_LOG(LogWinConvaiHttp, Verbose, TEXT("WinHttp Convaihttp[%p]: Attempting to set the Data Transfer handler on a request that has already started"), this);
 		return;
 	}
 
 	OnDataTransferredHandler = MoveTemp(Handler);
 }
 
-void FWinHttpConnectionConvaihttp::SetHeaderReceivedHandler(FWinHttpConnectionConvaihttpOnHeaderReceived&& Handler)
+void FCH_WinHttpConnectionConvaihttp::SetHeaderReceivedHandler(FCH_WinHttpConnectionConvaihttpOnHeaderReceived&& Handler)
 {
 	FScopeLock ScopeLock(&SyncObject);
 	if (CurrentAction != EState::WaitToStart)
 	{
-		UE_LOG(LogWinHttp, Verbose, TEXT("WinHttp Convaihttp[%p]: Attempting to set the Header Received handler on a request that has already started"), this);
+		UE_LOG(LogWinConvaiHttp, Verbose, TEXT("WinHttp Convaihttp[%p]: Attempting to set the Header Received handler on a request that has already started"), this);
 		return;
 	}
 
 	OnHeaderReceivedHandler = MoveTemp(Handler);
 }
 
-void FWinHttpConnectionConvaihttp::SetRequestCompletedHandler(FWinHttpConnectionConvaihttpOnRequestComplete&& Handler)
+void FCH_WinHttpConnectionConvaihttp::SetRequestCompletedHandler(FCH_WinHttpConnectionConvaihttpOnRequestComplete&& Handler)
 {
 	FScopeLock ScopeLock(&SyncObject);
 	if (CurrentAction != EState::WaitToStart)
 	{
-		UE_LOG(LogWinHttp, Verbose, TEXT("WinHttp Convaihttp[%p]: Attempting to set the Request Complete handler on a request that has already started"), this);
+		UE_LOG(LogWinConvaiHttp, Verbose, TEXT("WinHttp Convaihttp[%p]: Attempting to set the Request Complete handler on a request that has already started"), this);
 		return;
 	}
 
 	OnRequestCompleteHandler = MoveTemp(Handler);
 }
 
-FWinHttpConnectionConvaihttp::FWinHttpConnectionConvaihttp(
-	FWinHttpSession& InSession,
+FCH_WinHttpConnectionConvaihttp::FCH_WinHttpConnectionConvaihttp(
+	FCH_WinHttpSession& InSession,
 	const FString& InVerb,
 	const FString& InUrl,
 	const bool bInIsSecure,
@@ -420,13 +420,13 @@ FWinHttpConnectionConvaihttp::FWinHttpConnectionConvaihttp(
 	const TOptional<uint16> InPort,
 	const FString& InPathAndQuery,
 	const TMap<FString, FString>& InHeaders,
-	const TSharedPtr<FRequestPayload, ESPMode::ThreadSafe>& InPayload)
+	const TSharedPtr<FCH_RequestPayload, ESPMode::ThreadSafe>& InPayload)
 	: RequestUrl(InUrl)
 {
 	const uint32 LogPort = InPort.Get(bInIsSecure ? 443 : 80);
 	const uint64 LogPayloadSize = InPayload.IsValid() ? InPayload->GetContentLength() : 0;
 
-	UE_LOG(LogWinHttp, Verbose, TEXT("WinHttp Convaihttp[%p]: Creating request. InVerb=[%s] bIsSecure=[%d] Domain=[%s] Port=[%u] Path=[%s] PaylodSize=[%d]"), this, *InVerb, bInIsSecure, *InDomain, LogPort, *InPathAndQuery, LogPayloadSize);
+	UE_LOG(LogWinConvaiHttp, Verbose, TEXT("WinHttp Convaihttp[%p]: Creating request. InVerb=[%s] bIsSecure=[%d] Domain=[%s] Port=[%u] Path=[%s] PaylodSize=[%d]"), this, *InVerb, bInIsSecure, *InDomain, LogPort, *InPathAndQuery, LogPayloadSize);
 
 	// Note: Microsoft say not to reuse Connection Handles for multiple requests, despite what the API would suggest!  Microsoft say the Session handle
 	// is to be reused amongst requests with the same Security Protocol. If the same Session is used, backing sockets for connections will be reused
@@ -437,7 +437,7 @@ FWinHttpConnectionConvaihttp::FWinHttpConnectionConvaihttp(
 	if (!ConnectionHandle.IsValid())
 	{
 		const DWORD ErrorCode = GetLastError();
-		FWinHttpErrorHelper::LogWinHttpConnectFailure(ErrorCode);
+		FCH_WinHttpErrorHelper::LogWinConvaiHttpConnectFailure(ErrorCode);
 		return;
 	}
 
@@ -450,7 +450,7 @@ FWinHttpConnectionConvaihttp::FWinHttpConnectionConvaihttp(
 	if (!RequestHandle.IsValid())
 	{
 		const DWORD ErrorCode = GetLastError();
-		FWinHttpErrorHelper::LogWinHttpOpenRequestFailure(ErrorCode);
+		FCH_WinHttpErrorHelper::LogWinConvaiHttpOpenRequestFailure(ErrorCode);
 		ConnectionHandle.Reset();
 		return;
 	}
@@ -475,7 +475,7 @@ FWinHttpConnectionConvaihttp::FWinHttpConnectionConvaihttp(
 	}
 }
 
-bool FWinHttpConnectionConvaihttp::SetHeaders(const TMap<FString, FString>& Headers)
+bool FCH_WinHttpConnectionConvaihttp::SetHeaders(const TMap<FString, FString>& Headers)
 {
 	if (Headers.Num() == 0)
 	{
@@ -485,7 +485,7 @@ bool FWinHttpConnectionConvaihttp::SetHeaders(const TMap<FString, FString>& Head
 	FScopeLock ScopeLock(&SyncObject);
 	if (CurrentAction != EState::WaitToStart)
 	{
-		UE_LOG(LogWinHttp, Warning, TEXT("WinHttp Convaihttp[%p]: Attempted to set headers on request that has already started"), this);
+		UE_LOG(LogWinConvaiHttp, Warning, TEXT("WinHttp Convaihttp[%p]: Attempted to set headers on request that has already started"), this);
 		return false;
 	}
 
@@ -494,7 +494,7 @@ bool FWinHttpConnectionConvaihttp::SetHeaders(const TMap<FString, FString>& Head
 	{
 		if (HeaderPair.Key.IsEmpty())
 		{
-			UE_LOG(LogWinHttp, Warning, TEXT("WinHttp Convaihttp[%p]: Attempted to set empty header key"), this);
+			UE_LOG(LogWinConvaiHttp, Warning, TEXT("WinHttp Convaihttp[%p]: Attempted to set empty header key"), this);
 			return false;
 		}
 	}
@@ -530,13 +530,13 @@ bool FWinHttpConnectionConvaihttp::SetHeaders(const TMap<FString, FString>& Head
 			// Therefore, acknowleding the fact that a blank header was not added is valid.
 			if (HeaderPair.Value.IsEmpty() && ErrorCode == ERROR_WINHTTP_HEADER_NOT_FOUND)
 			{
-				UE_LOG(LogWinHttp, Verbose, TEXT("WinHttp Convaihttp[%p]: Ignoring request to clear header as it was not set. HeaderKey=[%s]"), this, *HeaderPair.Key);
+				UE_LOG(LogWinConvaiHttp, Verbose, TEXT("WinHttp Convaihttp[%p]: Ignoring request to clear header as it was not set. HeaderKey=[%s]"), this, *HeaderPair.Key);
 				continue;
 			}
 
-			FWinHttpErrorHelper::LogWinHttpAddRequestHeadersFailure(ErrorCode);
+			FCH_WinHttpErrorHelper::LogWinConvaiHttpAddRequestHeadersFailure(ErrorCode);
 
-			UE_LOG(LogWinHttp, Warning, TEXT("WinHttp Convaihttp[%p]: Failed to add header to request. Header=[%s]"), this, *HeaderBuffer);
+			UE_LOG(LogWinConvaiHttp, Warning, TEXT("WinHttp Convaihttp[%p]: Failed to add header to request. Header=[%s]"), this, *HeaderBuffer);
 			return false;
 		}
 	}
@@ -544,18 +544,18 @@ bool FWinHttpConnectionConvaihttp::SetHeaders(const TMap<FString, FString>& Head
 	return true;
 }
 
-bool FWinHttpConnectionConvaihttp::SetHeader(const FString& Key, const FString& Value)
+bool FCH_WinHttpConnectionConvaihttp::SetHeader(const FString& Key, const FString& Value)
 {
 	if (Key.IsEmpty())
 	{
-		UE_LOG(LogWinHttp, Warning, TEXT("WinHttp Convaihttp[%p]: Attempted to set empty header key"), this);
+		UE_LOG(LogWinConvaiHttp, Warning, TEXT("WinHttp Convaihttp[%p]: Attempted to set empty header key"), this);
 		return false;
 	}
 
 	FScopeLock ScopeLock(&SyncObject);
 	if (CurrentAction != EState::WaitToStart)
 	{
-		UE_LOG(LogWinHttp, Warning, TEXT("WinHttp Convaihttp[%p]: Attempted to set headers on request that has already started"), this);
+		UE_LOG(LogWinConvaiHttp, Warning, TEXT("WinHttp Convaihttp[%p]: Attempted to set headers on request that has already started"), this);
 		return false;
 	}
 
@@ -584,25 +584,25 @@ bool FWinHttpConnectionConvaihttp::SetHeader(const FString& Key, const FString& 
 		// Therefore, acknowleding the fact that a blank header was not added is valid.
 		if (Value.IsEmpty() && ErrorCode == ERROR_WINHTTP_HEADER_NOT_FOUND)
 		{
-			UE_LOG(LogWinHttp, Verbose, TEXT("WinHttp Convaihttp[%p]: Ignoring request to clear header as it was not set. HeaderKey=[%s]"), this, *Key);
+			UE_LOG(LogWinConvaiHttp, Verbose, TEXT("WinHttp Convaihttp[%p]: Ignoring request to clear header as it was not set. HeaderKey=[%s]"), this, *Key);
 			return true;
 		}
 
-		FWinHttpErrorHelper::LogWinHttpAddRequestHeadersFailure(ErrorCode);
+		FCH_WinHttpErrorHelper::LogWinConvaiHttpAddRequestHeadersFailure(ErrorCode);
 
-		UE_LOG(LogWinHttp, Warning, TEXT("WinHttp Convaihttp[%p]: Failed to add header to request. Header=[%s]"), this, *HeaderBuffer);
+		UE_LOG(LogWinConvaiHttp, Warning, TEXT("WinHttp Convaihttp[%p]: Failed to add header to request. Header=[%s]"), this, *HeaderBuffer);
 		return false;
 	}
 
 	return true;
 }
 
-bool FWinHttpConnectionConvaihttp::SetPayload(const TSharedRef<FRequestPayload, ESPMode::ThreadSafe>& InPayload)
+bool FCH_WinHttpConnectionConvaihttp::SetPayload(const TSharedRef<FCH_RequestPayload, ESPMode::ThreadSafe>& InPayload)
 {
 	FScopeLock ScopeLock(&SyncObject);
 	if (CurrentAction != EState::WaitToStart)
 	{
-		UE_LOG(LogWinHttp, Warning, TEXT("WinHttp Convaihttp[%p]: Attempted to set playload for request that has already started"), this);
+		UE_LOG(LogWinConvaiHttp, Warning, TEXT("WinHttp Convaihttp[%p]: Attempted to set playload for request that has already started"), this);
 		return false;
 	}
 
@@ -610,7 +610,7 @@ bool FWinHttpConnectionConvaihttp::SetPayload(const TSharedRef<FRequestPayload, 
 	return true;
 }
 
-bool FWinHttpConnectionConvaihttp::SendRequest()
+bool FCH_WinHttpConnectionConvaihttp::SendRequest()
 {
 	check(CurrentAction == EState::WaitToStart || CurrentAction == EState::SendRequest);
 	const EState StateAtStart = CurrentAction;
@@ -629,7 +629,7 @@ bool FWinHttpConnectionConvaihttp::SendRequest()
 	while (!WinHttpSendRequest(RequestHandle.Get(), AdditionalHeaders, AdditionalHeaderCount, DataToSendImmediately, DataToSendImmediatelyLength, TotalDataLength, Context))
 	{
 		const DWORD ErrorCode = GetLastError();
-		FWinHttpErrorHelper::LogWinHttpSendRequestFailure(ErrorCode);
+		FCH_WinHttpErrorHelper::LogWinConvaiHttpSendRequestFailure(ErrorCode);
 
 		if (ErrorCode == ERROR_WINHTTP_RESEND_REQUEST && RequestHandle.IsValid())
 		{
@@ -646,7 +646,7 @@ bool FWinHttpConnectionConvaihttp::SendRequest()
 	return true;
 }
 
-void FWinHttpConnectionConvaihttp::IncrementSentByteCounts(const uint64 AmountSent)
+void FCH_WinHttpConnectionConvaihttp::IncrementSentByteCounts(const uint64 AmountSent)
 {
 	check(CurrentAction == EState::WaitForSendComplete);
 
@@ -664,7 +664,7 @@ void FWinHttpConnectionConvaihttp::IncrementSentByteCounts(const uint64 AmountSe
 	NumBytesSuccessfullySent += AmountSent;
 }
 
-void FWinHttpConnectionConvaihttp::IncrementReceivedByteCounts(const uint64 AmountReceived)
+void FCH_WinHttpConnectionConvaihttp::IncrementReceivedByteCounts(const uint64 AmountReceived)
 {
 	check(CurrentAction == EState::WaitForNextResponseBodyChunkData);
 
@@ -680,7 +680,7 @@ void FWinHttpConnectionConvaihttp::IncrementReceivedByteCounts(const uint64 Amou
 	bHasPendingDelegate = true;
 }
 
-bool FWinHttpConnectionConvaihttp::HasRequestBodyToSend() const
+bool FCH_WinHttpConnectionConvaihttp::HasRequestBodyToSend() const
 {
 	if (!Payload.IsValid())
 	{
@@ -690,7 +690,7 @@ bool FWinHttpConnectionConvaihttp::HasRequestBodyToSend() const
 	return Payload->GetContentLength() > NumBytesSuccessfullySent;
 }
 
-bool FWinHttpConnectionConvaihttp::SendAdditionalRequestBody()
+bool FCH_WinHttpConnectionConvaihttp::SendAdditionalRequestBody()
 {
 	check(CurrentAction == EState::SendAdditionalRequestBody);
 	check(HasRequestBodyToSend());
@@ -715,13 +715,13 @@ bool FWinHttpConnectionConvaihttp::SendAdditionalRequestBody()
 	// Resize our buffer based on how much was actually written to it
 	PayloadBuffer.SetNumUninitialized(ActualDataSize, false);
 
-	UE_LOG(LogWinHttp, VeryVerbose, TEXT("WinHttp Convaihttp[%p]: Writing Data. NumBytes=[%d] TotalBytesWritten=[%d] TotalBytes=[%d]"), this, PayloadBuffer.Num(), NumBytesSuccessfullySent, Payload->GetContentLength())
+	UE_LOG(LogWinConvaiHttp, VeryVerbose, TEXT("WinHttp Convaihttp[%p]: Writing Data. NumBytes=[%d] TotalBytesWritten=[%d] TotalBytes=[%d]"), this, PayloadBuffer.Num(), NumBytesSuccessfullySent, Payload->GetContentLength())
 
 	CurrentAction = EState::WaitForSendComplete;
 	if (!WinHttpWriteData(RequestHandle.Get(), PayloadBuffer.GetData(), PayloadBuffer.Num(), NULL))
 	{
 		const DWORD ErrorCode = GetLastError();
-		FWinHttpErrorHelper::LogWinHttpWriteDataFailure(ErrorCode);
+		FCH_WinHttpErrorHelper::LogWinConvaiHttpWriteDataFailure(ErrorCode);
 
 		CurrentAction = EState::SendAdditionalRequestBody;
 		return false;
@@ -730,7 +730,7 @@ bool FWinHttpConnectionConvaihttp::SendAdditionalRequestBody()
 	return true;
 }
 
-bool FWinHttpConnectionConvaihttp::RequestResponse()
+bool FCH_WinHttpConnectionConvaihttp::RequestResponse()
 {
 	check(CurrentAction == EState::RequestResponse);
 	check(!Payload.IsValid() || Payload->GetContentLength() == NumBytesSuccessfullySent);
@@ -741,7 +741,7 @@ bool FWinHttpConnectionConvaihttp::RequestResponse()
 	{
 		// Log error
 		const DWORD ErrorCode = GetLastError();
-		FWinHttpErrorHelper::LogWinHttpReceiveResponseFailure(ErrorCode);
+		FCH_WinHttpErrorHelper::LogWinConvaiHttpReceiveResponseFailure(ErrorCode);
 
 		// Check for the error that asks us to resend the request
 		if (ErrorCode == ERROR_WINHTTP_RESEND_REQUEST)
@@ -757,7 +757,7 @@ bool FWinHttpConnectionConvaihttp::RequestResponse()
 	return true;
 }
 
-bool FWinHttpConnectionConvaihttp::ProcessResponseHeaders()
+bool FCH_WinHttpConnectionConvaihttp::ProcessResponseHeaders()
 {
 	check(CurrentAction == EState::ProcessResponseHeaders);
 
@@ -781,7 +781,7 @@ bool FWinHttpConnectionConvaihttp::ProcessResponseHeaders()
 		if (ErrorCode != ERROR_INSUFFICIENT_BUFFER)
 		{
 			// We're expecting an insufficent buffer error, but this is a real error, so fail the request
-			FWinHttpErrorHelper::LogWinHttpQueryHeadersFailure(ErrorCode);
+			FCH_WinHttpErrorHelper::LogWinConvaiHttpQueryHeadersFailure(ErrorCode);
 			return false;
 		}
 	}
@@ -799,7 +799,7 @@ bool FWinHttpConnectionConvaihttp::ProcessResponseHeaders()
 		{
 			// Unexpected failure
 			const DWORD ErrorCode = GetLastError();
-			FWinHttpErrorHelper::LogWinHttpQueryHeadersFailure(ErrorCode);
+			FCH_WinHttpErrorHelper::LogWinConvaiHttpQueryHeadersFailure(ErrorCode);
 			return false;
 		}
 
@@ -811,7 +811,7 @@ bool FWinHttpConnectionConvaihttp::ProcessResponseHeaders()
 			ReadIndex += StringLength + 1;
 
 			// This log is only safe because these headers are actually null-terminated!
-			UE_LOG(LogWinHttp, VeryVerbose, TEXT("WinHttp Convaihttp[%p]: Received Header Header=[%ls]"), this, CompleteHeader.GetData());
+			UE_LOG(LogWinConvaiHttp, VeryVerbose, TEXT("WinHttp Convaihttp[%p]: Received Header Header=[%ls]"), this, CompleteHeader.GetData());
 
 			int32 OutIndex = INDEX_NONE;
 			if (CompleteHeader.FindChar(L':', OutIndex))
@@ -843,7 +843,7 @@ bool FWinHttpConnectionConvaihttp::ProcessResponseHeaders()
 		{
 			// Unexpected failure
 			const DWORD ErrorCode = GetLastError();
-			FWinHttpErrorHelper::LogWinHttpQueryHeadersFailure(ErrorCode);
+			FCH_WinHttpErrorHelper::LogWinConvaiHttpQueryHeadersFailure(ErrorCode);
 			return false;
 		}
 		ResponseCode = static_cast<EConvaihttpResponseCodes::Type>(StatusCode);
@@ -871,7 +871,7 @@ bool FWinHttpConnectionConvaihttp::ProcessResponseHeaders()
 	return true;
 }
 
-bool FWinHttpConnectionConvaihttp::RequestNextResponseBodyChunkSize()
+bool FCH_WinHttpConnectionConvaihttp::RequestNextResponseBodyChunkSize()
 {
 	check(CurrentAction == EState::RequestNextResponseBodyChunkSize);
 
@@ -879,7 +879,7 @@ bool FWinHttpConnectionConvaihttp::RequestNextResponseBodyChunkSize()
 	if (!WinHttpQueryDataAvailable(RequestHandle.Get(), NULL))
 	{
 		const DWORD ErrorCode = GetLastError();
-		FWinHttpErrorHelper::LogWinHttpQueryDataAvailableFailure(ErrorCode);
+		FCH_WinHttpErrorHelper::LogWinConvaiHttpQueryDataAvailableFailure(ErrorCode);
 		
 		CurrentAction = EState::RequestNextResponseBodyChunkSize;
 		return false;
@@ -888,7 +888,7 @@ bool FWinHttpConnectionConvaihttp::RequestNextResponseBodyChunkSize()
 	return true;
 }
 
-bool FWinHttpConnectionConvaihttp::RequestNextResponseBodyChunkData()
+bool FCH_WinHttpConnectionConvaihttp::RequestNextResponseBodyChunkData()
 {
 	check(CurrentAction == EState::RequestNextResponseBodyChunkData);
 	check(ResponseBytesAvailable.IsSet());
@@ -899,7 +899,7 @@ bool FWinHttpConnectionConvaihttp::RequestNextResponseBodyChunkData()
 	if (NumBytesAvailable == 0)
 	{
 		// We're finished reading data
-		UE_LOG(LogWinHttp, VeryVerbose, TEXT("WinHttp Convaihttp[%p]: Request Completed Successfully"), this);
+		UE_LOG(LogWinConvaiHttp, VeryVerbose, TEXT("WinHttp Convaihttp[%p]: Request Completed Successfully"), this);
 		FinishRequest(EConvaihttpRequestStatus::Succeeded);
 		return true;
 	}
@@ -911,7 +911,7 @@ bool FWinHttpConnectionConvaihttp::RequestNextResponseBodyChunkData()
 	if (!WinHttpReadData(RequestHandle.Get(), CurrentChunk.GetData() + ResponseBytesWritten, NumBytesAvailable, NULL))
 	{
 		const DWORD ErrorCode = GetLastError();
-		FWinHttpErrorHelper::LogWinHttpReadDataFailure(ErrorCode);
+		FCH_WinHttpErrorHelper::LogWinConvaiHttpReadDataFailure(ErrorCode);
 
 		CurrentAction = EState::RequestNextResponseBodyChunkData;
 		return false;
@@ -921,7 +921,7 @@ bool FWinHttpConnectionConvaihttp::RequestNextResponseBodyChunkData()
 
 }
 
-bool FWinHttpConnectionConvaihttp::FinishRequest(const EConvaihttpRequestStatus::Type NewFinalState)
+bool FCH_WinHttpConnectionConvaihttp::FinishRequest(const EConvaihttpRequestStatus::Type NewFinalState)
 {
 	// Make sure this state is a "final" state
 	if (!EConvaihttpRequestStatus::IsFinished(NewFinalState))
@@ -943,11 +943,11 @@ bool FWinHttpConnectionConvaihttp::FinishRequest(const EConvaihttpRequestStatus:
 	// Log-level Log if successful, Warning if failure
 	if (FinalState == EConvaihttpRequestStatus::Succeeded)
 	{
-		UE_LOG(LogWinHttp, Verbose, TEXT("WinHttp Convaihttp[%p]: Request Complete. State=[%s]"), this, EConvaihttpRequestStatus::ToString(FinalState.GetValue()));
+		UE_LOG(LogWinConvaiHttp, Verbose, TEXT("WinHttp Convaihttp[%p]: Request Complete. State=[%s]"), this, EConvaihttpRequestStatus::ToString(FinalState.GetValue()));
 	}
 	else
 	{
-		UE_LOG(LogWinHttp, Warning, TEXT("WinHttp Convaihttp[%p]: Request Complete. State=[%s]"), this, EConvaihttpRequestStatus::ToString(FinalState.GetValue()));
+		UE_LOG(LogWinConvaiHttp, Warning, TEXT("WinHttp Convaihttp[%p]: Request Complete. State=[%s]"), this, EConvaihttpRequestStatus::ToString(FinalState.GetValue()));
 	}
 
 	// We have a pending action now that our final state is set
@@ -959,18 +959,18 @@ bool FWinHttpConnectionConvaihttp::FinishRequest(const EConvaihttpRequestStatus:
 	return true;
 }
 
-void FWinHttpConnectionConvaihttp::HandleConnectedToServer(const wchar_t* ServerIP)
+void FCH_WinHttpConnectionConvaihttp::HandleConnectedToServer(const wchar_t* ServerIP)
 {
-	UE_LOG(LogWinHttp, VeryVerbose, TEXT("WinHttp Convaihttp[%p]: Callback Status=[CONNECTED_TO_SERVER] ServerIP=[%s]"), this, WCHAR_TO_TCHAR(ServerIP));
+	UE_LOG(LogWinConvaiHttp, VeryVerbose, TEXT("WinHttp Convaihttp[%p]: Callback Status=[CONNECTED_TO_SERVER] ServerIP=[%s]"), this, WCHAR_TO_TCHAR(ServerIP));
 }
 
-void FWinHttpConnectionConvaihttp::HandleSendingRequest()
+void FCH_WinHttpConnectionConvaihttp::HandleSendingRequest()
 {
-	UE_LOG(LogWinHttp, VeryVerbose, TEXT("WinHttp Convaihttp[%p]: Callback Status=[SENDING_REQUEST]"), this);
+	UE_LOG(LogWinConvaiHttp, VeryVerbose, TEXT("WinHttp Convaihttp[%p]: Callback Status=[SENDING_REQUEST]"), this);
 	
 	FScopeLock ScopeLock(&SyncObject);
 
-	if (FWinHttpConvaihttpManager* ActiveManager = FWinHttpConvaihttpManager::GetManager())
+	if (FCH_WinHttpConvaihttpManager* ActiveManager = FCH_WinHttpConvaihttpManager::GetManager())
 	{
 		if (!ActiveManager->ValidateRequestCertificates(*this))
 		{
@@ -980,9 +980,9 @@ void FWinHttpConnectionConvaihttp::HandleSendingRequest()
 	}
 }
 
-void FWinHttpConnectionConvaihttp::HandleWriteComplete(const uint64 NumBytesSent)
+void FCH_WinHttpConnectionConvaihttp::HandleWriteComplete(const uint64 NumBytesSent)
 {
-	UE_LOG(LogWinHttp, VeryVerbose, TEXT("WinHttp Convaihttp[%p]: Callback Status=[WRITE_COMPLETE] NumBytesSent=[%d]"), this, NumBytesSent);
+	UE_LOG(LogWinConvaiHttp, VeryVerbose, TEXT("WinHttp Convaihttp[%p]: Callback Status=[WRITE_COMPLETE] NumBytesSent=[%d]"), this, NumBytesSent);
 
 	FScopeLock ScopeLock(&SyncObject);
 
@@ -1008,9 +1008,9 @@ void FWinHttpConnectionConvaihttp::HandleWriteComplete(const uint64 NumBytesSent
 	}
 }
 
-void FWinHttpConnectionConvaihttp::HandleSendRequestComplete()
+void FCH_WinHttpConnectionConvaihttp::HandleSendRequestComplete()
 {
-	UE_LOG(LogWinHttp, VeryVerbose, TEXT("WinHttp Convaihttp[%p]: Callback Status=[SEND_REQUEST_COMPLETE]"), this);
+	UE_LOG(LogWinConvaiHttp, VeryVerbose, TEXT("WinHttp Convaihttp[%p]: Callback Status=[SEND_REQUEST_COMPLETE]"), this);
 
 	FScopeLock ScopeLock(&SyncObject);
 	
@@ -1039,9 +1039,9 @@ void FWinHttpConnectionConvaihttp::HandleSendRequestComplete()
 	}
 }
 
-void FWinHttpConnectionConvaihttp::HandleHeadersAvailable()
+void FCH_WinHttpConnectionConvaihttp::HandleHeadersAvailable()
 {
-	UE_LOG(LogWinHttp, VeryVerbose, TEXT("WinHttp Convaihttp[%p]: Callback Status=[HEADERS_AVAILABLE]"), this);
+	UE_LOG(LogWinConvaiHttp, VeryVerbose, TEXT("WinHttp Convaihttp[%p]: Callback Status=[HEADERS_AVAILABLE]"), this);
 
 	FScopeLock ScopeLock(&SyncObject);
 
@@ -1060,9 +1060,9 @@ void FWinHttpConnectionConvaihttp::HandleHeadersAvailable()
 	ReleasePayloadData();
 }
 
-void FWinHttpConnectionConvaihttp::HandleDataAvailable(const uint64 NumBytesAvailable)
+void FCH_WinHttpConnectionConvaihttp::HandleDataAvailable(const uint64 NumBytesAvailable)
 {
-	UE_LOG(LogWinHttp, VeryVerbose, TEXT("WinHttp Convaihttp[%p]: Callback Status=[DATA_AVAILABLE] NumBytesAvailable=[%u]"), this, NumBytesAvailable);
+	UE_LOG(LogWinConvaiHttp, VeryVerbose, TEXT("WinHttp Convaihttp[%p]: Callback Status=[DATA_AVAILABLE] NumBytesAvailable=[%u]"), this, NumBytesAvailable);
 
 	FScopeLock ScopeLock(&SyncObject);
 
@@ -1075,9 +1075,9 @@ void FWinHttpConnectionConvaihttp::HandleDataAvailable(const uint64 NumBytesAvai
 	CurrentAction = EState::RequestNextResponseBodyChunkData;
 }
 
-void FWinHttpConnectionConvaihttp::HandleReadComplete(const uint64 NumBytesRead)
+void FCH_WinHttpConnectionConvaihttp::HandleReadComplete(const uint64 NumBytesRead)
 {
-	UE_LOG(LogWinHttp, VeryVerbose, TEXT("WinHttp Convaihttp[%p]: Callback Status=[READ_COMPLETE] NumBytesRead=[%u]"), this, NumBytesRead);
+	UE_LOG(LogWinConvaiHttp, VeryVerbose, TEXT("WinHttp Convaihttp[%p]: Callback Status=[READ_COMPLETE] NumBytesRead=[%u]"), this, NumBytesRead);
 
 	FScopeLock ScopeLock(&SyncObject);
 	
@@ -1107,9 +1107,9 @@ namespace
 	}
 }
 
-void FWinHttpConnectionConvaihttp::HandleRequestError(const uint32 ErrorApiId, const uint32 ErrorCode)
+void FCH_WinHttpConnectionConvaihttp::HandleRequestError(const uint32 ErrorApiId, const uint32 ErrorCode)
 {
-	UE_LOG(LogWinHttp, Warning, TEXT("WinHttp Convaihttp[%p]: Callback Status=[REQUEST_ERROR] ErrorCode=[0x%0.8X]"), this, ErrorCode);
+	UE_LOG(LogWinConvaiHttp, Warning, TEXT("WinHttp Convaihttp[%p]: Callback Status=[REQUEST_ERROR] ErrorCode=[0x%0.8X]"), this, ErrorCode);
 
 	FScopeLock ScopeLock(&SyncObject);
 
@@ -1122,26 +1122,26 @@ void FWinHttpConnectionConvaihttp::HandleRequestError(const uint32 ErrorApiId, c
 	switch (ErrorApiId)
 	{
 	case API_RECEIVE_RESPONSE:
-		FWinHttpErrorHelper::LogWinHttpReceiveResponseFailure(ErrorCode);
+		FCH_WinHttpErrorHelper::LogWinConvaiHttpReceiveResponseFailure(ErrorCode);
 		break;
 	case API_QUERY_DATA_AVAILABLE:
-		FWinHttpErrorHelper::LogWinHttpQueryDataAvailableFailure(ErrorCode);
+		FCH_WinHttpErrorHelper::LogWinConvaiHttpQueryDataAvailableFailure(ErrorCode);
 		break;
 	case API_READ_DATA:
-		FWinHttpErrorHelper::LogWinHttpReadDataFailure(ErrorCode);
+		FCH_WinHttpErrorHelper::LogWinConvaiHttpReadDataFailure(ErrorCode);
 		break;
 	case API_WRITE_DATA:
-		FWinHttpErrorHelper::LogWinHttpWriteDataFailure(ErrorCode);
+		FCH_WinHttpErrorHelper::LogWinConvaiHttpWriteDataFailure(ErrorCode);
 		break;
 	case API_SEND_REQUEST:
-		FWinHttpErrorHelper::LogWinHttpSendRequestFailure(ErrorCode);
+		FCH_WinHttpErrorHelper::LogWinConvaiHttpSendRequestFailure(ErrorCode);
 		break;
 	case API_GET_PROXY_FOR_URL:
 		// We don't call this function so this shouldn't happen, but here for completions sake
-		UE_LOG(LogWinHttp, Error, TEXT("GetProxyForUrl failed with error code 0x%0.8X"), ErrorCode);
+		UE_LOG(LogWinConvaiHttp, Error, TEXT("GetProxyForUrl failed with error code 0x%0.8X"), ErrorCode);
 		break;
 	default:
-		UE_LOG(LogWinHttp, Error, TEXT("Unknown API (%u) failed with error code 0x%0.8X"), ErrorApiId, ErrorCode);
+		UE_LOG(LogWinConvaiHttp, Error, TEXT("Unknown API (%u) failed with error code 0x%0.8X"), ErrorApiId, ErrorCode);
 		break;
 	}
 
@@ -1164,9 +1164,9 @@ void FWinHttpConnectionConvaihttp::HandleRequestError(const uint32 ErrorApiId, c
 	}
 }
 
-void FWinHttpConnectionConvaihttp::HandleHandleClosing()
+void FCH_WinHttpConnectionConvaihttp::HandleHandleClosing()
 {
-	UE_LOG(LogWinHttp, VeryVerbose, TEXT("WinHttp Convaihttp[%p]: Callback Status=[HANDLE_CLOSING]"), this);
+	UE_LOG(LogWinConvaiHttp, VeryVerbose, TEXT("WinHttp Convaihttp[%p]: Callback Status=[HANDLE_CLOSING]"), this);
 
 	// If we are closing the request handle, we can release the payload memory
 	ReleasePayloadData();
@@ -1174,10 +1174,10 @@ void FWinHttpConnectionConvaihttp::HandleHandleClosing()
 	KeepAlive.Reset();
 }
 
-void FWinHttpConnectionConvaihttp::HandleConvaihttpStatusCallback(HINTERNET ResourceHandle, EWinHttpCallbackStatus Status, void* StatusInformation, uint32 StatusInformationLength)
+void FCH_WinHttpConnectionConvaihttp::HandleConvaihttpStatusCallback(HINTERNET ResourceHandle, EWinHttpCallbackStatus Status, void* StatusInformation, uint32 StatusInformationLength)
 {
 	// Prevent the request from dying while we're any callback
-	TSharedPtr<FWinHttpConnectionConvaihttp, ESPMode::ThreadSafe> LocalKeepAlive = KeepAlive;
+	TSharedPtr<FCH_WinHttpConnectionConvaihttp, ESPMode::ThreadSafe> LocalKeepAlive = KeepAlive;
 
 	switch (Status)
 	{
@@ -1253,7 +1253,7 @@ void FWinHttpConnectionConvaihttp::HandleConvaihttpStatusCallback(HINTERNET Reso
 			check(StatusInformation != nullptr);
 
 			const wchar_t* const ServerName = static_cast<const wchar_t*>(StatusInformation);
-			UE_LOG(LogWinHttp, VeryVerbose, TEXT("WinHttp Convaihttp[%p]: Callback Status=[%s] ServerName=[%s]"), this, LexToString(Status), WCHAR_TO_TCHAR(ServerName));
+			UE_LOG(LogWinConvaiHttp, VeryVerbose, TEXT("WinHttp Convaihttp[%p]: Callback Status=[%s] ServerName=[%s]"), this, CH_LexToString(Status), WCHAR_TO_TCHAR(ServerName));
 			return;
 		}
 		case EWinHttpCallbackStatus::NameResolved:
@@ -1262,7 +1262,7 @@ void FWinHttpConnectionConvaihttp::HandleConvaihttpStatusCallback(HINTERNET Reso
 			check(StatusInformation != nullptr);
 
 			const wchar_t* const ServerIPString = static_cast<const wchar_t*>(StatusInformation);
-			UE_LOG(LogWinHttp, VeryVerbose, TEXT("WinHttp Convaihttp[%p]: Callback Status=[%s] ServerIP=[%s]"), this, LexToString(Status), WCHAR_TO_TCHAR(ServerIPString));
+			UE_LOG(LogWinConvaiHttp, VeryVerbose, TEXT("WinHttp Convaihttp[%p]: Callback Status=[%s] ServerIP=[%s]"), this, CH_LexToString(Status), WCHAR_TO_TCHAR(ServerIPString));
 			return;
 		}
 		case EWinHttpCallbackStatus::RequestSent:
@@ -1270,7 +1270,7 @@ void FWinHttpConnectionConvaihttp::HandleConvaihttpStatusCallback(HINTERNET Reso
 			check(StatusInformationLength == sizeof(DWORD));
 			check(StatusInformation != nullptr);
 			const DWORD NumBytesSent = *static_cast<DWORD*>(StatusInformation);
-			UE_LOG(LogWinHttp, Verbose, TEXT("WinHttp Convaihttp[%p]: Callback Status=[REQUEST_SENT] NumBytesSent=[%d]"), this, static_cast<int32>(NumBytesSent));
+			UE_LOG(LogWinConvaiHttp, Verbose, TEXT("WinHttp Convaihttp[%p]: Callback Status=[REQUEST_SENT] NumBytesSent=[%d]"), this, static_cast<int32>(NumBytesSent));
 			return;
 		}
 		case EWinHttpCallbackStatus::ConnectingToServer:
@@ -1288,14 +1288,14 @@ void FWinHttpConnectionConvaihttp::HandleConvaihttpStatusCallback(HINTERNET Reso
 		case EWinHttpCallbackStatus::ShutdownComplete:
 		case EWinHttpCallbackStatus::SettingsWriteComplete:
 		case EWinHttpCallbackStatus::SettingsReadComplete:
-			UE_LOG(LogWinHttp, VeryVerbose, TEXT("WinHttp Convaihttp[%p]: Callback Status=[%s]"), this, LexToString(Status));
+			UE_LOG(LogWinConvaiHttp, VeryVerbose, TEXT("WinHttp Convaihttp[%p]: Callback Status=[%s]"), this, CH_LexToString(Status));
 			return;
 	}
 
 	checkNoEntry();
 }
 
-void FWinHttpConnectionConvaihttp::ReleasePayloadData()
+void FCH_WinHttpConnectionConvaihttp::ReleasePayloadData()
 {
 	// We don't need our payload data anymore, release the memory
 	PayloadBuffer.Empty();

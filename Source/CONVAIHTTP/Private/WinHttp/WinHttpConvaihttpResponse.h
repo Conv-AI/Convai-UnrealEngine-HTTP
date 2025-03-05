@@ -11,11 +11,11 @@
 /**
  * WinHttp implementation of an CONVAIHTTP response
  */
-class FWinHttpConvaihttpResponse : public IConvaihttpResponse
+class FCH_WinHttpConvaihttpResponse : public IConvaihttpResponse
 {
 public:
-	FWinHttpConvaihttpResponse(const FString& InUrl, const EConvaihttpResponseCodes::Type InConvaihttpStatusCode, TMap<FString, FString>&& InHeaders, TArray64<uint8>&& InPayload);
-	virtual ~FWinHttpConvaihttpResponse() = default;
+	FCH_WinHttpConvaihttpResponse(const FString& InUrl, const EConvaihttpResponseCodes::Type InConvaihttpStatusCode, TMap<FString, FString>&& InHeaders, TArray64<uint8>&& InPayload);
+	virtual ~FCH_WinHttpConvaihttpResponse() = default;
 
 	//~ Begin IConvaihttpBase Interface
 	virtual FString GetURL() const override;

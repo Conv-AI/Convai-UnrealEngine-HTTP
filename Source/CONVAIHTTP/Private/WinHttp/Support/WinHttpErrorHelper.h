@@ -6,7 +6,7 @@
 
 #include "CoreMinimal.h"
 
-class CONVAIHTTP_API FWinHttpErrorHelper
+class CONVAIHTTP_API FCH_WinHttpErrorHelper
 {
 public:
 	/**
@@ -14,102 +14,102 @@ public:
 	 *
 	 * @param ErrorCode The error that occured
 	 */
-	static void LogWinHttpOpenFailure(const uint32 ErrorCode);
+	static void LogWinConvaiHttpOpenFailure(const uint32 ErrorCode);
 
 	/**
 	 * Log that an WinHttpCloseHandle call failed with the specified ErrorCode
 	 *
 	 * @param ErrorCode The error that occured
 	 */
-	static void LogWinHttpCloseHandleFailure(const uint32 ErrorCode);
+	static void LogWinConvaiHttpCloseHandleFailure(const uint32 ErrorCode);
 
 	/**
 	 * Log that an WinHttpSetTimeouts call failed with the specified ErrorCode
 	 *
 	 * @param ErrorCode The error that occured
 	 */
-	static void LogWinHttpSetTimeoutsFailure(const uint32 ErrorCode);
+	static void LogWinConvaiHttpSetTimeoutsFailure(const uint32 ErrorCode);
 
 	/**
 	 * Log that an WinHttpConnect call failed with the specified ErrorCode
 	 *
 	 * @param ErrorCode The error that occured
 	 */
-	static void LogWinHttpConnectFailure(const uint32 ErrorCode);
+	static void LogWinConvaiHttpConnectFailure(const uint32 ErrorCode);
 
 	/**
 	 * Log that an WinHttpOpenRequest call failed with the specified ErrorCode
 	 *
 	 * @param ErrorCode The error that occured
 	 */
-	static void LogWinHttpOpenRequestFailure(const uint32 ErrorCode);
+	static void LogWinConvaiHttpOpenRequestFailure(const uint32 ErrorCode);
 
 	/**
 	 * Log that an WinHttpSetOption call failed with the specified ErrorCode
 	 *
 	 * @param ErrorCode The error that occured
 	 */
-	static void LogWinHttpSetOptionFailure(const uint32 ErrorCode);
+	static void LogWinConvaiHttpSetOptionFailure(const uint32 ErrorCode);
 
 	/**
 	 * Log that an WinHttpAddRequestHeaders call failed with the specified ErrorCode
 	 *
 	 * @param ErrorCode The error that occured
 	 */
-	static void LogWinHttpAddRequestHeadersFailure(const uint32 ErrorCode);
+	static void LogWinConvaiHttpAddRequestHeadersFailure(const uint32 ErrorCode);
 
 	/**
 	 * Log that an WinHttpSetStatusCallback call failed with the specified ErrorCode
 	 *
 	 * @param ErrorCode The error that occured
 	 */
-	static void LogWinHttpSetStatusCallbackFailure(const uint32 ErrorCode);
+	static void LogWinConvaiHttpSetStatusCallbackFailure(const uint32 ErrorCode);
 
 	/**
 	 * Log that an WinHttpSendRequest call failed with the specified ErrorCode
 	 *
 	 * @param ErrorCode The error that occured
 	 */
-	static void LogWinHttpSendRequestFailure(const uint32 ErrorCode);
+	static void LogWinConvaiHttpSendRequestFailure(const uint32 ErrorCode);
 
 	/**
 	 * Log that an WinHttpReceiveResponse call failed with the specified ErrorCode
 	 *
 	 * @param ErrorCode The error that occured
 	 */
-	static void LogWinHttpReceiveResponseFailure(const uint32 ErrorCode);
+	static void LogWinConvaiHttpReceiveResponseFailure(const uint32 ErrorCode);
 
 	/**
 	 * Log that an WinHttpQueryHeaders call failed with the specified ErrorCode
 	 *
 	 * @param ErrorCode The error that occured
 	 */
-	static void LogWinHttpQueryHeadersFailure(const uint32 ErrorCode);
+	static void LogWinConvaiHttpQueryHeadersFailure(const uint32 ErrorCode);
 
 	/**
 	 * Log that an WinHttpQueryDataAvailable call failed with the specified ErrorCode
 	 *
 	 * @param ErrorCode The error that occured
 	 */
-	static void LogWinHttpQueryDataAvailableFailure(const uint32 ErrorCode);
+	static void LogWinConvaiHttpQueryDataAvailableFailure(const uint32 ErrorCode);
 
 	/**
 	 * Log that an WinHttpReadData call failed with the specified ErrorCode
 	 *
 	 * @param ErrorCode The error that occured
 	 */
-	static void LogWinHttpReadDataFailure(const uint32 ErrorCode);
+	static void LogWinConvaiHttpReadDataFailure(const uint32 ErrorCode);
 
 	/**
 	 * Log that an WinHttpWriteData call failed with the specified ErrorCode
 	 *
 	 * @param ErrorCode The error that occured
 	 */
-	static void LogWinHttpWriteDataFailure(const uint32 ErrorCode);
+	static void LogWinConvaiHttpWriteDataFailure(const uint32 ErrorCode);
 
 private:
 	/** This class should not be instantiated */
-	FWinHttpErrorHelper() = delete;
+	FCH_WinHttpErrorHelper() = delete;
 };
 
 

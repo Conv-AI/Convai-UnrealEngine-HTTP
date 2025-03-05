@@ -19,7 +19,7 @@
 #define UE_HAS_CONVAIHTTP2_SUPPORT 0
 #endif
 
-FWinHttpSession::FWinHttpSession(uint32 SecurityProtocolFlags, const bool bInForceSecureConnections)
+FCH_WinHttpSession::FCH_WinHttpSession(uint32 SecurityProtocolFlags, const bool bInForceSecureConnections)
 	: bForceSecureConnections(bInForceSecureConnections)
 {
 	const FString UserAgent = FGenericPlatformConvaihttp::GetDefaultUserAgent();
@@ -40,7 +40,7 @@ FWinHttpSession::FWinHttpSession(uint32 SecurityProtocolFlags, const bool bInFor
 	if (!SessionHandle.IsValid())
 	{
 		const DWORD ErrorCode = GetLastError();
-		FWinHttpErrorHelper::LogWinHttpOpenFailure(ErrorCode);
+		FCH_WinHttpErrorHelper::LogWinConvaiHttpOpenFailure(ErrorCode);
 		return;
 	}
 
@@ -49,7 +49,7 @@ FWinHttpSession::FWinHttpSession(uint32 SecurityProtocolFlags, const bool bInFor
 	{
 		// Get last error
 		const DWORD ErrorCode = GetLastError();
-		FWinHttpErrorHelper::LogWinHttpSetOptionFailure(ErrorCode);
+		FCH_WinHttpErrorHelper::LogWinConvaiHttpSetOptionFailure(ErrorCode);
 
 		// Reset handle to signify we failed
 		SessionHandle.Reset();
@@ -61,25 +61,25 @@ FWinHttpSession::FWinHttpSession(uint32 SecurityProtocolFlags, const bool bInFor
 	DWORD FlagEnableCONVAIHTTP2 = WINHTTP_PROTOCOL_FLAG_CONVAIHTTP2;
 	if (WinHttpSetOption(SessionHandle.Get(), WINHTTP_OPTION_ENABLE_CONVAIHTTP_PROTOCOL, &FlagEnableCONVAIHTTP2, sizeof(FlagEnableCONVAIHTTP2)))
 	{
-		UE_LOG(LogWinHttp, Verbose, TEXT("WinHttp local machine has support for CONVAIHTTP/2"));
+		UE_LOG(LogWinConvaiHttp, Verbose, TEXT("WinHttp local machine has support for CONVAIHTTP/2"));
 	}
 	else
 	{
-		UE_LOG(LogWinHttp, Verbose, TEXT("WinHttp local machine does not support CONVAIHTTP/2, CONVAIHTTP/1.1 will be used"));
+		UE_LOG(LogWinConvaiHttp, Verbose, TEXT("WinHttp local machine does not support CONVAIHTTP/2, CONVAIHTTP/1.1 will be used"));
 	}
 #else // ^^^ UE_HAS_CONVAIHTTP2_SUPPORT ^^^ // vvv !UE_HAS_CONVAIHTTP2_SUPPORT vvv
-	UE_LOG(LogWinHttp, Verbose, TEXT("UE WinHttp compiled without CONVAIHTTP/2 support"));
+	UE_LOG(LogWinConvaiHttp, Verbose, TEXT("UE WinHttp compiled without CONVAIHTTP/2 support"));
 #endif // !UE_HAS_CONVAIHTTP2_SUPPORT
 
 	// Opportunistically enable request compression if we can
 	DWORD FlagEnableCompression = WINHTTP_DECOMPRESSION_FLAG_ALL;
 	if (WinHttpSetOption(SessionHandle.Get(), WINHTTP_OPTION_DECOMPRESSION, &FlagEnableCompression, sizeof(FlagEnableCompression)))
 	{
-		UE_LOG(LogWinHttp, Verbose, TEXT("WinHttp local machine has support for compression"));
+		UE_LOG(LogWinConvaiHttp, Verbose, TEXT("WinHttp local machine has support for compression"));
 	}
 	else
 	{
-		UE_LOG(LogWinHttp, Verbose, TEXT("WinHttp local machine does not support for compression"));
+		UE_LOG(LogWinConvaiHttp, Verbose, TEXT("WinHttp local machine does not support for compression"));
 	}
 
 	FConvaihttpModule& ConvaihttpModule = FConvaihttpModule::Get();
@@ -92,23 +92,23 @@ FWinHttpSession::FWinHttpSession(uint32 SecurityProtocolFlags, const bool bInFor
 	{
 		// Get last error
 		const DWORD ErrorCode = GetLastError();
-		FWinHttpErrorHelper::LogWinHttpSetTimeoutsFailure(ErrorCode);
+		FCH_WinHttpErrorHelper::LogWinConvaiHttpSetTimeoutsFailure(ErrorCode);
 	}
 
 	// Success
 }
 
-bool FWinHttpSession::IsValid() const
+bool FCH_WinHttpSession::IsValid() const
 {
 	return SessionHandle.IsValid();
 }
 
-HINTERNET FWinHttpSession::Get() const
+HINTERNET FCH_WinHttpSession::Get() const
 {
 	return SessionHandle.Get();
 }
 
-bool FWinHttpSession::AreOnlySecureConnectionsAllowed() const
+bool FCH_WinHttpSession::AreOnlySecureConnectionsAllowed() const
 {
 	return bForceSecureConnections;
 }

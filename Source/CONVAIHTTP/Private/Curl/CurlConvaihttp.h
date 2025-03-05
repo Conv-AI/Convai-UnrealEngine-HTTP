@@ -384,7 +384,7 @@ private:
 	/** The response object which we will use to pair with this request */
 	TSharedPtr<class FCurlConvaihttpResponse,ESPMode::ThreadSafe> Response;
 	/** Payload to use with the request. Typically for POST, PUT, or PATCH */
-	TUniquePtr<FRequestPayload> RequestPayload;
+	TUniquePtr<FCH_RequestPayload> RequestPayload;
 	/** Is the request payload seekable? */
 	bool bIsRequestPayloadSeekable = false;
 	/** Current status of request being processed */

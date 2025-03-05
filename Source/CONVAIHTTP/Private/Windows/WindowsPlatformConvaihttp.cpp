@@ -101,7 +101,7 @@ FConvaihttpManager * FWindowsPlatformConvaihttp::CreatePlatformConvaihttpManager
 #if WITH_CURL
 	return new FCurlConvaihttpManager();
 #else // ^^^ WITH_CURL  ^^^ // vvv WITH_CURL  vvv
-	return new FWinHttpConvaihttpManager();
+	return new FCH_WinHttpConvaihttpManager();
 #endif // !WITH_CURL 
 }
 
@@ -110,7 +110,7 @@ IConvaihttpRequest* FWindowsPlatformConvaihttp::ConstructRequest()
 #if WITH_CURL
 		return new FCurlConvaihttpRequest();
 #else // ^^^ WITH_CURL  ^^^ // vvv WITH_CURL  vvv
-		return new FWinHttpConvaihttpRequest();
+		return new FCH_WinHttpConvaihttpRequest();
 #endif // !WITH_CURL 
 }
 

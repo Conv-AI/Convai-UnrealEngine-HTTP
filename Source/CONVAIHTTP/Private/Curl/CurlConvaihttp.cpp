@@ -1,8 +1,8 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #if WITH_CURL
-
 #include "Curl/CurlConvaihttp.h"
+#include "WinHttp/Support/WinHttpTypes.h"
 #include "Stats/Stats.h"
 #include "Misc/App.h"
 #include "ConvaihttpModule.h"
@@ -324,7 +324,7 @@ void FCurlConvaihttpRequest::SetContent(TArray64<uint8>&& ContentPayload)
 		return;
 	}
 
-	RequestPayload = MakeUnique<FRequestPayloadInMemory>(MoveTemp(ContentPayload));
+	RequestPayload = MakeUnique<FCH_RequestPayloadInMemory>(MoveTemp(ContentPayload));
 	bIsRequestPayloadSeekable = true;
 }
 
@@ -340,7 +340,7 @@ void FCurlConvaihttpRequest::SetContentAsString(const FString& ContentString)
 	TArray64<uint8> Buffer;
 	Buffer.SetNumUninitialized(Utf8Length);
 	FTCHARToUTF8_Convert::Convert((UTF8CHAR*)Buffer.GetData(), Buffer.Num(), *ContentString, ContentString.Len());
-	RequestPayload = MakeUnique<FRequestPayloadInMemory>(MoveTemp(Buffer));
+	RequestPayload = MakeUnique<FCH_RequestPayloadInMemory>(MoveTemp(Buffer));
 	bIsRequestPayloadSeekable = true;
 }
 
@@ -357,7 +357,7 @@ bool FCurlConvaihttpRequest::SetContentAsStreamedFile(const FString& Filename)
 	FArchive* File = IFileManager::Get().CreateFileReader(*Filename);
 	if (File)
 	{
-		RequestPayload = MakeUnique<FRequestPayloadInFileStream>(MakeShareable(File));
+		RequestPayload = MakeUnique<FCH_RequestPayloadInFileStream>(MakeShareable(File));
 	}
 	else
 	{
@@ -378,7 +378,7 @@ bool FCurlConvaihttpRequest::SetContentFromStream(TSharedRef<FArchive, ESPMode::
 		return false;
 	}
 
-	RequestPayload = MakeUnique<FRequestPayloadInFileStream>(Stream);
+	RequestPayload = MakeUnique<FCH_RequestPayloadInFileStream>(Stream);
 	bIsRequestPayloadSeekable = false;
 	return true;
 }
@@ -768,7 +768,7 @@ bool FCurlConvaihttpRequest::SetupRequest()
 
 	if (!RequestPayload.IsValid())
 	{
-		RequestPayload = MakeUnique<FRequestPayloadInMemory>(TArray64<uint8>());
+		RequestPayload = MakeUnique<FCH_RequestPayloadInMemory>(TArray64<uint8>());
 		bIsRequestPayloadSeekable = true;
 	}
 
@@ -795,7 +795,7 @@ bool FCurlConvaihttpRequest::SetupRequest()
 	// content-length should be present convaihttp://www.w3.org/Protocols/rfc2616/rfc2616-sec4.html#sec4.4
 	if (GetHeader(TEXT("Content-Length")).IsEmpty())
 	{
-		SetHeader(TEXT("Content-Length"), LexToString(RequestPayload->GetContentLength()));
+		SetHeader(TEXT("Content-Length"), FString::Printf(TEXT("%lld"), RequestPayload->GetContentLength()));
 	}
 
 	// Remove "Expect: 100-continue" since this is supposed to cause problematic behavior on Amazon ELB (and WinInet doesn't send that either)
@@ -834,8 +834,8 @@ bool FCurlConvaihttpRequest::SetupRequestConvaihttpThread()
 		if (Verb == TEXT("POST"))
 		{
 			// If we don't pass any other Content-Type, RequestPayload is assumed to be URL-encoded by this time
-			// In the case of using a streamed file, you must explicitly set the Content-Type, because RequestPayload->IsURLEncoded returns false.
-			check(!GetHeader(TEXT("Content-Type")).IsEmpty() || RequestPayload->IsURLEncoded());
+			// In the case of using a streamed file, you must explicitly set the Content-Type, because RequestPayload->CH_IsURLEncoded returns false.
+			check(!GetHeader(TEXT("Content-Type")).IsEmpty() || RequestPayload->CH_IsURLEncoded());
 			curl_easy_setopt(EasyHandle, CURLOPT_POST, 1L);
 			curl_easy_setopt(EasyHandle, CURLOPT_POSTFIELDS, NULL);
 			curl_easy_setopt(EasyHandle, CURLOPT_POSTFIELDSIZE_LARGE, static_cast<curl_off_t>(RequestPayload->GetContentLength()));
@@ -872,7 +872,7 @@ bool FCurlConvaihttpRequest::SetupRequestConvaihttpThread()
 		{
 			// If we don't pass any other Content-Type, RequestPayload is assumed to be URL-encoded by this time
 			// (if we pass, don't check here and trust the request)
-			check(!GetHeader(TEXT("Content-Type")).IsEmpty() || RequestPayload->IsURLEncoded());
+			check(!GetHeader(TEXT("Content-Type")).IsEmpty() || RequestPayload->CH_IsURLEncoded());
 
 			curl_easy_setopt(EasyHandle, CURLOPT_POST, 1L);
 			curl_easy_setopt(EasyHandle, CURLOPT_CUSTOMREQUEST, "DELETE");

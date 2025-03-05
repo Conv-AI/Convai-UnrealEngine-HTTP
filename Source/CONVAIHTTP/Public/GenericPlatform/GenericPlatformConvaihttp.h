@@ -123,7 +123,7 @@ public:
 	/**
 	 * Helper function for checking if a byte array is in URL encoded format.
 	 */
-	static bool IsURLEncoded(const TArray64<uint8>& Payload);
+	static bool CH_IsURLEncoded(const TArray64<uint8>& Payload);
 
 	/**
 	 * Extract the URL-Decoded value of the specified ParameterName from Url. An unset return means the parameter was not present in Url, while an empty value means it was present, but had no value.

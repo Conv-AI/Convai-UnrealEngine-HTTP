@@ -4,7 +4,7 @@
 
 #include "WinHttp/Support/WinHttpTypes.h"
 
-const TCHAR* LexToString(const EWinHttpCallbackStatus Status)
+const TCHAR* CH_LexToString(const EWinHttpCallbackStatus Status)
 {
 	switch (Status)
 	{
@@ -41,7 +41,7 @@ const TCHAR* LexToString(const EWinHttpCallbackStatus Status)
 	return TEXT("");
 }
 
-bool IsValidStatus(const EWinHttpCallbackStatus Status)
+bool CH_IsValidStatus(const EWinHttpCallbackStatus Status)
 {
 	switch (Status)
 	{
@@ -78,6 +78,6 @@ bool IsValidStatus(const EWinHttpCallbackStatus Status)
 	return false;
 }
 
-DEFINE_LOG_CATEGORY(LogWinHttp);
+DEFINE_LOG_CATEGORY(LogWinConvaiHttp);
 
 #endif // WITH_WINHTTP

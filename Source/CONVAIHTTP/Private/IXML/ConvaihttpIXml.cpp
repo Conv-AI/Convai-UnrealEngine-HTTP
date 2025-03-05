@@ -119,7 +119,7 @@ void FConvaihttpRequestIXML::SetURL(const FString& InURL)
 //-----------------------------------------------------------------------------
 void FConvaihttpRequestIXML::SetContent(const TArray64<uint8>& ContentPayload)
 {
-	Payload = MakeUnique<FRequestPayloadInMemory>(ContentPayload);
+	Payload = MakeUnique<FCH_RequestPayloadInMemory>(ContentPayload);
 }
 
 //-----------------------------------------------------------------------------
@@ -127,7 +127,7 @@ void FConvaihttpRequestIXML::SetContent(const TArray64<uint8>& ContentPayload)
 //-----------------------------------------------------------------------------
 void FConvaihttpRequestIXML::SetContent(TArray64<uint8>&& ContentPayload)
 {
-	Payload = MakeUnique<FRequestPayloadInMemory>(MoveTemp(ContentPayload));
+	Payload = MakeUnique<FCH_RequestPayloadInMemory>(MoveTemp(ContentPayload));
 }
 
 //-----------------------------------------------------------------------------
@@ -141,7 +141,7 @@ void FConvaihttpRequestIXML::SetContentAsString(const FString& ContentString)
 		TArray64<uint8> Buffer;
 		Buffer.SetNumUninitialized(Utf8Length);
 		FTCHARToUTF8_Convert::Convert((ANSICHAR*)Buffer.GetData(), Buffer.Num(), *ContentString, ContentString.Len());
-		Payload = MakeUnique<FRequestPayloadInMemory>(MoveTemp(Buffer));
+		Payload = MakeUnique<FCH_RequestPayloadInMemory>(MoveTemp(Buffer));
 	}
 }
 
@@ -158,7 +158,7 @@ bool FConvaihttpRequestIXML::SetContentAsStreamedFile(const FString& Filename)
 	FArchive* File = IFileManager::Get().CreateFileReader(*Filename);
 	if (File)
 	{
-		Payload = MakeUnique<FRequestPayloadInFileStream>(MakeShareable(File));
+		Payload = MakeUnique<FCH_RequestPayloadInFileStream>(MakeShareable(File));
 		return true;
 	}
 	else
@@ -179,7 +179,7 @@ bool FConvaihttpRequestIXML::SetContentFromStream(TSharedRef<FArchive, ESPMode::
 		return false;
 	}
 
-	Payload = MakeUnique<FRequestPayloadInFileStream>(Stream);
+	Payload = MakeUnique<FCH_RequestPayloadInFileStream>(Stream);
 	return true;
 }
 

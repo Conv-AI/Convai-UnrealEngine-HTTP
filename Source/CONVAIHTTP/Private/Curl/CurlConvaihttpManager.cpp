@@ -2,6 +2,8 @@
 
 #include "Curl/CurlConvaihttpManager.h"
 
+#include "WinHttp/Support/WinHttpTypes.h"
+
 #if WITH_CURL
 
 #include "HAL/PlatformFileManager.h"
@@ -41,7 +43,7 @@ CURLSH* FCurlConvaihttpManager::GShareHandle = nullptr;
 FCurlConvaihttpManager::FCurlRequestOptions FCurlConvaihttpManager::CurlRequestOptions;
 
 // set functions that will init the memory
-namespace LibCryptoMemHooks
+namespace CH_LibCryptoMemHooks
 {
 	void* (*ChainedMalloc)(size_t Size, const char* File, int Line) = nullptr;
 	void* (*ChainedRealloc)(void* Ptr, const size_t Size, const char* File, int Line) = nullptr;
@@ -93,11 +95,11 @@ namespace LibCryptoMemHooks
 	void UnsetMemoryHooks()
 	{
 		// remove our overrides
-		if (LibCryptoMemHooks::bMemoryHooksSet)
+		if (CH_LibCryptoMemHooks::bMemoryHooksSet)
 		{
 			// do not set this in Shipping until we prove that the change in OpenSSL behavior is safe
 #if PLATFORM_UNIX && !UE_BUILD_SHIPPING && WITH_SSL
-			CRYPTO_set_mem_functions(LibCryptoMemHooks::ChainedMalloc, LibCryptoMemHooks::ChainedRealloc, LibCryptoMemHooks::ChainedFree);
+			CRYPTO_set_mem_functions(CH_LibCryptoMemHooks::ChainedMalloc, CH_LibCryptoMemHooks::ChainedRealloc, CH_LibCryptoMemHooks::ChainedFree);
 #endif // PLATFORM_UNIX && !UE_BUILD_SHIPPING && WITH_SSL
 
 			bMemoryHooksSet = false;
@@ -134,7 +136,7 @@ void FCurlConvaihttpManager::InitCurl()
 
 	// Override libcrypt functions to initialize memory since OpenSSL triggers multiple valgrind warnings due to this.
 	// Do this before libcurl/libopenssl/libcrypto has been inited.
-	LibCryptoMemHooks::SetMemoryHooks();
+	CH_LibCryptoMemHooks::SetMemoryHooks();
 
 	CURLcode InitResult = curl_global_init_mem(CurlInitFlags, CurlMalloc, CurlFree, CurlRealloc, CurlStrdup, CurlCalloc);
 	if (InitResult == 0)
@@ -342,7 +344,7 @@ void FCurlConvaihttpManager::ShutdownCurl()
 
 	curl_global_cleanup();
 
-	LibCryptoMemHooks::UnsetMemoryHooks();
+	CH_LibCryptoMemHooks::UnsetMemoryHooks();
 
 #if WITH_SSL
 	// Shutdown OpenSSL
@@ -395,7 +397,10 @@ void FCurlConvaihttpManager::UpdateConfigs()
 		{
 			if (CurlRequestOptions.bAcceptCompressedContent != bAcceptCompressedContent)
 			{
-				UE_LOG(LogConvaihttp, Log, TEXT("AcceptCompressedContent changed from %s to %s"), *LexToString(CurlRequestOptions.bAcceptCompressedContent), *LexToString(bAcceptCompressedContent));
+				UE_LOG(LogConvaihttp, Log, TEXT("AcceptCompressedContent changed from %s to %s"), 
+				CurlRequestOptions.bAcceptCompressedContent ? TEXT("true") : TEXT("false"),
+				bAcceptCompressedContent ? TEXT("true") : TEXT("false"));
+
 				CurlRequestOptions.bAcceptCompressedContent = bAcceptCompressedContent;
 			}
 		}
@@ -419,7 +424,10 @@ void FCurlConvaihttpManager::UpdateConfigs()
 		{
 			if (CurlRequestOptions.bAllowSeekFunction != bConfigAllowSeekFunction)
 			{
-				UE_LOG(LogConvaihttp, Log, TEXT("bAllowSeekFunction changed from %s to %s"), *LexToString(CurlRequestOptions.bAllowSeekFunction), *LexToString(bConfigAllowSeekFunction));
+				UE_LOG(LogConvaihttp, Log, TEXT("bAllowSeekFunction changed from %s to %s"),
+				CurlRequestOptions.bAllowSeekFunction ? TEXT("true") : TEXT("false"),
+				bConfigAllowSeekFunction ? TEXT("true") : TEXT("false"));
+
 				CurlRequestOptions.bAllowSeekFunction = bConfigAllowSeekFunction;
 			}
 		}

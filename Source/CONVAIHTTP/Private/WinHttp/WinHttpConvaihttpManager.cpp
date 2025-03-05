@@ -11,7 +11,7 @@
 
 namespace
 {
-	FWinHttpConvaihttpManager* GWinHttpManager = nullptr;
+	FCH_WinHttpConvaihttpManager* GWinHttpManager = nullptr;
 
 	DWORD GetPlatformProtocolFlags()
 	{
@@ -34,12 +34,12 @@ namespace
 	}
 }
 
-FWinHttpConvaihttpManager* FWinHttpConvaihttpManager::GetManager()
+FCH_WinHttpConvaihttpManager* FCH_WinHttpConvaihttpManager::GetManager()
 {
 	return GWinHttpManager;
 }
 
-FWinHttpConvaihttpManager::FWinHttpConvaihttpManager()
+FCH_WinHttpConvaihttpManager::FCH_WinHttpConvaihttpManager()
 {
 	if (GWinHttpManager == nullptr)
 	{
@@ -48,21 +48,21 @@ FWinHttpConvaihttpManager::FWinHttpConvaihttpManager()
 
 	FCoreDelegates::ApplicationWillEnterBackgroundDelegate.AddLambda([]()
 	{
-		if (FWinHttpConvaihttpManager* const Manager = FWinHttpConvaihttpManager::GetManager())
+		if (FCH_WinHttpConvaihttpManager* const Manager = FCH_WinHttpConvaihttpManager::GetManager())
 		{
 			Manager->HandleApplicationSuspending();
 		}
 	});
 	FCoreDelegates::ApplicationHasEnteredForegroundDelegate.AddLambda([]()
 	{
-		if (FWinHttpConvaihttpManager* const Manager = FWinHttpConvaihttpManager::GetManager())
+		if (FCH_WinHttpConvaihttpManager* const Manager = FCH_WinHttpConvaihttpManager::GetManager())
 		{
 			Manager->HandleApplicationResuming();
 		}
 	});
 }
 
-FWinHttpConvaihttpManager::~FWinHttpConvaihttpManager()
+FCH_WinHttpConvaihttpManager::~FCH_WinHttpConvaihttpManager()
 {
 	if (GWinHttpManager == this)
 	{
@@ -70,35 +70,35 @@ FWinHttpConvaihttpManager::~FWinHttpConvaihttpManager()
 	}
 }
 
-void FWinHttpConvaihttpManager::OnBeforeFork()
+void FCH_WinHttpConvaihttpManager::OnBeforeFork()
 {
 	// FConvaihttpManager's OnBeforeFork will flush all active requests, so it will be safe to reset our active sessions
 	FConvaihttpManager::OnBeforeFork();
 	ActiveSessions.Reset();
 }
 
-void FWinHttpConvaihttpManager::HandleApplicationSuspending()
+void FCH_WinHttpConvaihttpManager::HandleApplicationSuspending()
 {
-	SCOPED_ENTER_BACKGROUND_EVENT(FWinHttpConvaihttpManager_HandleApplicationSuspending);
+	SCOPED_ENTER_BACKGROUND_EVENT(FCH_WinHttpConvaihttpManager_HandleApplicationSuspending);
 
 	Flush(EConvaihttpFlushReason::Background);
 	ActiveSessions.Reset();
 }
 
-void FWinHttpConvaihttpManager::HandleApplicationResuming()
+void FCH_WinHttpConvaihttpManager::HandleApplicationResuming()
 {
 	// No-op
 }
 
-void FWinHttpConvaihttpManager::QuerySessionForUrl(const FString& /*UnusedUrl*/, FWinHttpQuerySessionComplete&& Delegate)
+void FCH_WinHttpConvaihttpManager::QuerySessionForUrl(const FString& /*UnusedUrl*/, FCH_WinHttpQuerySessionComplete&& Delegate)
 {
 	// Pretend to be async here so applications properly react on platforms where this is actually async
 	AddGameThreadTask([LambdaDelegate = MoveTemp(Delegate)]()
 	{
-		QUICK_SCOPE_CYCLE_COUNTER(STAT_FWinHttpConvaihttpManager_QuerySessionForUrlLambda);
+		QUICK_SCOPE_CYCLE_COUNTER(STAT_FCH_WinHttpConvaihttpManager_QuerySessionForUrlLambda);
 
-		FWinHttpSession* SessionPtr = nullptr;
-		if (FWinHttpConvaihttpManager* ConvaihttpManager = GetManager())
+		FCH_WinHttpSession* SessionPtr = nullptr;
+		if (FCH_WinHttpConvaihttpManager* ConvaihttpManager = GetManager())
 		{
 			const uint32 DefaultProtocolFlags = GetPlatformProtocolFlags();
 			SessionPtr = ConvaihttpManager->FindOrCreateSession(DefaultProtocolFlags);
@@ -108,7 +108,7 @@ void FWinHttpConvaihttpManager::QuerySessionForUrl(const FString& /*UnusedUrl*/,
 	});
 }
 
-bool FWinHttpConvaihttpManager::ValidateRequestCertificates(IWinHttpConnection& Connection)
+bool FCH_WinHttpConvaihttpManager::ValidateRequestCertificates(IWinHttpConnection& Connection)
 {
 	// WinHttp already does regular validation of certificates, this is for additional validation
 	// NOTE: this is usually not called on the game thread! Everything that happens here must be thread safe!
@@ -119,21 +119,21 @@ bool FWinHttpConvaihttpManager::ValidateRequestCertificates(IWinHttpConnection& 
 	return true;
 }
 
-void FWinHttpConvaihttpManager::ReleaseRequestResources(IWinHttpConnection& Connection)
+void FCH_WinHttpConvaihttpManager::ReleaseRequestResources(IWinHttpConnection& Connection)
 {
 	// No-op
 }
 
-FWinHttpSession* FWinHttpConvaihttpManager::FindOrCreateSession(const uint32 SecurityProtocols)
+FCH_WinHttpSession* FCH_WinHttpConvaihttpManager::FindOrCreateSession(const uint32 SecurityProtocols)
 {
 	check(IsInGameThread());
 
-	TUniquePtr<FWinHttpSession>* SessionPtrPtr = ActiveSessions.Find(SecurityProtocols);
+	TUniquePtr<FCH_WinHttpSession>* SessionPtrPtr = ActiveSessions.Find(SecurityProtocols);
 
-	FWinHttpSession* SessionPtr = SessionPtrPtr ? SessionPtrPtr->Get() : nullptr;
+	FCH_WinHttpSession* SessionPtr = SessionPtrPtr ? SessionPtrPtr->Get() : nullptr;
 	if (!SessionPtr)
 	{
-		SessionPtr = ActiveSessions.Emplace(SecurityProtocols, MakeUnique<FWinHttpSession>(SecurityProtocols, bPlatformForcesSecureConnections)).Get();
+		SessionPtr = ActiveSessions.Emplace(SecurityProtocols, MakeUnique<FCH_WinHttpSession>(SecurityProtocols, bPlatformForcesSecureConnections)).Get();
 	}
 
 	return SessionPtr;

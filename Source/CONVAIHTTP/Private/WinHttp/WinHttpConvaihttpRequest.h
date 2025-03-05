@@ -9,18 +9,18 @@
 #include "Interfaces/IConvaihttpResponse.h"
 #include "IConvaihttpThreadedRequest.h"
 
-class FRequestPayload;
-class FWinHttpConvaihttpResponse;
-class FWinHttpConnectionConvaihttp;
+class FCH_RequestPayload;
+class FCH_WinHttpConvaihttpResponse;
+class FCH_WinHttpConnectionConvaihttp;
 
 using FStringKeyValueMap = TMap<FString, FString>;
 
-class FWinHttpConvaihttpRequest
+class FCH_WinHttpConvaihttpRequest
 	: public IConvaihttpThreadedRequest
 {
 public:
-	FWinHttpConvaihttpRequest();
-	virtual ~FWinHttpConvaihttpRequest();
+	FCH_WinHttpConvaihttpRequest();
+	virtual ~FCH_WinHttpConvaihttpRequest();
 
 	//~ Begin IConvaihttpBase Interface
 	virtual FString GetURL() const override;
@@ -72,7 +72,7 @@ protected:
 
 	void OnWinHttpRequestComplete();
 private:
-	struct FWinHttpConvaihttpRequestData
+	struct FCH_WinHttpConvaihttpRequestData
 	{
 		/** */
 		FString Url;
@@ -87,7 +87,7 @@ private:
 		FString Verb;
 
 		/** Payload to use with the request. Typically for POST, PUT, or PATCH */
-		TSharedPtr<FRequestPayload, ESPMode::ThreadSafe> Payload;
+		TSharedPtr<FCH_RequestPayload, ESPMode::ThreadSafe> Payload;
 	} RequestData;
 
 	/** */
@@ -105,10 +105,10 @@ private:
 	EConvaihttpRequestStatus::Type CompletionStatus = EConvaihttpRequestStatus::NotStarted;
 
 	/** */
-	TSharedPtr<FWinHttpConnectionConvaihttp, ESPMode::ThreadSafe> Connection;
+	TSharedPtr<FCH_WinHttpConnectionConvaihttp, ESPMode::ThreadSafe> Connection;
 
 	/** */
-	TSharedPtr<FWinHttpConvaihttpResponse, ESPMode::ThreadSafe> Response;
+	TSharedPtr<FCH_WinHttpConvaihttpResponse, ESPMode::ThreadSafe> Response;
 
 	/** */
 	int32 TotalBytesSent = 0;

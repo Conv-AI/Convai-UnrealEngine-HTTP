@@ -5,7 +5,7 @@
 #include "WinHttp/WinHttpConvaihttpResponse.h"
 #include "Convaihttp.h"
 
-FWinHttpConvaihttpResponse::FWinHttpConvaihttpResponse(const FString& InUrl, const EConvaihttpResponseCodes::Type InConvaihttpStatusCode, TMap<FString, FString>&& InHeaders, TArray64<uint8>&& InPayload)
+FCH_WinHttpConvaihttpResponse::FCH_WinHttpConvaihttpResponse(const FString& InUrl, const EConvaihttpResponseCodes::Type InConvaihttpStatusCode, TMap<FString, FString>&& InHeaders, TArray64<uint8>&& InPayload)
 	: Url(InUrl)
 	, ConvaihttpStatusCode(InConvaihttpStatusCode)
 	, Headers(MoveTemp(InHeaders))
@@ -13,12 +13,12 @@ FWinHttpConvaihttpResponse::FWinHttpConvaihttpResponse(const FString& InUrl, con
 {
 }
 
-FString FWinHttpConvaihttpResponse::GetURL() const
+FString FCH_WinHttpConvaihttpResponse::GetURL() const
 {
 	return Url;
 }
 
-FString FWinHttpConvaihttpResponse::GetURLParameter(const FString& ParameterName) const
+FString FCH_WinHttpConvaihttpResponse::GetURLParameter(const FString& ParameterName) const
 {
 	FString ReturnValue;
 	if (TOptional<FString> OptionalParameterValue = FGenericPlatformConvaihttp::GetUrlParameter(Url, ParameterName))
@@ -28,7 +28,7 @@ FString FWinHttpConvaihttpResponse::GetURLParameter(const FString& ParameterName
 	return ReturnValue;
 }
 
-FString FWinHttpConvaihttpResponse::GetHeader(const FString& HeaderName) const
+FString FCH_WinHttpConvaihttpResponse::GetHeader(const FString& HeaderName) const
 {
 	FString Result;
 	if (const FString* Header = Headers.Find(HeaderName))
@@ -38,7 +38,7 @@ FString FWinHttpConvaihttpResponse::GetHeader(const FString& HeaderName) const
 	return Result;
 }
 
-TArray64<FString> FWinHttpConvaihttpResponse::GetAllHeaders() const
+TArray64<FString> FCH_WinHttpConvaihttpResponse::GetAllHeaders() const
 {
 	TArray64<FString> Result;
 	Result.Reserve(Headers.Num());
@@ -49,27 +49,27 @@ TArray64<FString> FWinHttpConvaihttpResponse::GetAllHeaders() const
 	return Result;
 }
 
-FString FWinHttpConvaihttpResponse::GetContentType() const
+FString FCH_WinHttpConvaihttpResponse::GetContentType() const
 {
 	return GetHeader(TEXT("Content-Type"));
 }
 
-uint64 FWinHttpConvaihttpResponse::GetContentLength() const
+uint64 FCH_WinHttpConvaihttpResponse::GetContentLength() const
 {
 	return Payload.Num();
 }
 
-const TArray64<uint8>& FWinHttpConvaihttpResponse::GetContent() const
+const TArray64<uint8>& FCH_WinHttpConvaihttpResponse::GetContent() const
 {
 	return Payload;
 }
 
-int32 FWinHttpConvaihttpResponse::GetResponseCode() const
+int32 FCH_WinHttpConvaihttpResponse::GetResponseCode() const
 {
 	return ConvaihttpStatusCode;
 }
 
-FString FWinHttpConvaihttpResponse::GetContentAsString() const
+FString FCH_WinHttpConvaihttpResponse::GetContentAsString() const
 {
 	// Content is NOT null-terminated; we need to specify lengths here
 	FUTF8ToTCHAR TCHARData(reinterpret_cast<const ANSICHAR*>(Payload.GetData()), Payload.Num());

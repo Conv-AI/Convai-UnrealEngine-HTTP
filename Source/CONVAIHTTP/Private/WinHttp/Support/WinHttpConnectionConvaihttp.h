@@ -15,32 +15,32 @@
 
 #include <atomic>
 
-class FWinHttpSession;
-class FWinHttpRequestContextConvaihttp;
-class FRequestPayload;
+class FCH_WinHttpSession;
+class FCH_WinHttpRequestContextConvaihttp;
+class FCH_RequestPayload;
 
 using FStringKeyValueMap = TMap<FString, FString>;
 
-DECLARE_DELEGATE_TwoParams(FWinHttpConnectionConvaihttpOnDataTransferred, int32 /*BytesSent*/, int32 /*BytesReceived*/);
-DECLARE_DELEGATE_TwoParams(FWinHttpConnectionConvaihttpOnHeaderReceived, const FString& /*HeaderKey*/, const FString& /*HeaderValue*/);
-DECLARE_DELEGATE_OneParam(FWinHttpConnectionConvaihttpOnRequestComplete, EConvaihttpRequestStatus::Type /*CompletionStatus*/);
+DECLARE_DELEGATE_TwoParams(FCH_WinHttpConnectionConvaihttpOnDataTransferred, int32 /*BytesSent*/, int32 /*BytesReceived*/);
+DECLARE_DELEGATE_TwoParams(FCH_WinHttpConnectionConvaihttpOnHeaderReceived, const FString& /*HeaderKey*/, const FString& /*HeaderValue*/);
+DECLARE_DELEGATE_OneParam(FCH_WinHttpConnectionConvaihttpOnRequestComplete, EConvaihttpRequestStatus::Type /*CompletionStatus*/);
 
-class CONVAIHTTP_API FWinHttpConnectionConvaihttp
+class CONVAIHTTP_API FCH_WinHttpConnectionConvaihttp
 	: public IWinHttpConnection
 {
 public:
-	static TSharedPtr<FWinHttpConnectionConvaihttp, ESPMode::ThreadSafe> CreateConvaihttpConnection(
-		FWinHttpSession& Session,
+	static TSharedPtr<FCH_WinHttpConnectionConvaihttp, ESPMode::ThreadSafe> CreateConvaihttpConnection(
+		FCH_WinHttpSession& Session,
 		const FString& Verb,
 		const FString& Url,
 		const TMap<FString, FString>& Headers,
-		const TSharedPtr<FRequestPayload, ESPMode::ThreadSafe>& Payload);
+		const TSharedPtr<FCH_RequestPayload, ESPMode::ThreadSafe>& Payload);
 
-	virtual ~FWinHttpConnectionConvaihttp();
-	FWinHttpConnectionConvaihttp(const FWinHttpConnectionConvaihttp& Other) = delete;
-	FWinHttpConnectionConvaihttp(FWinHttpConnectionConvaihttp&& Other) = delete;
-	FWinHttpConnectionConvaihttp& operator=(const FWinHttpConnectionConvaihttp& Other) = delete;
-	FWinHttpConnectionConvaihttp& operator=(FWinHttpConnectionConvaihttp&& Other) = delete;
+	virtual ~FCH_WinHttpConnectionConvaihttp();
+	FCH_WinHttpConnectionConvaihttp(const FCH_WinHttpConnectionConvaihttp& Other) = delete;
+	FCH_WinHttpConnectionConvaihttp(FCH_WinHttpConnectionConvaihttp&& Other) = delete;
+	FCH_WinHttpConnectionConvaihttp& operator=(const FCH_WinHttpConnectionConvaihttp& Other) = delete;
+	FCH_WinHttpConnectionConvaihttp& operator=(FCH_WinHttpConnectionConvaihttp&& Other) = delete;
 
 	//~ Begin IWinHttpConnection Interface
 	virtual bool IsValid() const override;
@@ -72,23 +72,23 @@ public:
 	 *
 	 * @param Handler The Handler to call when we receive or send data
 	 */
-	void SetDataTransferredHandler(FWinHttpConnectionConvaihttpOnDataTransferred&& Handler);
+	void SetDataTransferredHandler(FCH_WinHttpConnectionConvaihttpOnDataTransferred&& Handler);
 	/**
 	 * Bind a handler that is called each tick we receive a new header
 	 *
 	 * @param Handler The Handler to call when we receive a new header
 	 */
-	void SetHeaderReceivedHandler(FWinHttpConnectionConvaihttpOnHeaderReceived&& Handler);
+	void SetHeaderReceivedHandler(FCH_WinHttpConnectionConvaihttpOnHeaderReceived&& Handler);
 	/**
 	 * Bind a handler that is called when the request completes
 	 *
 	 * @param Handler The Handler to call when the request completes
 	 */
-	void SetRequestCompletedHandler(FWinHttpConnectionConvaihttpOnRequestComplete&& Handler);
+	void SetRequestCompletedHandler(FCH_WinHttpConnectionConvaihttpOnRequestComplete&& Handler);
 
 protected:
-	FWinHttpConnectionConvaihttp(
-		FWinHttpSession& Session,
+	FCH_WinHttpConnectionConvaihttp(
+		FCH_WinHttpSession& Session,
 		const FString& Url,
 		const FString& Verb,
 		const bool bIsSecure,
@@ -96,7 +96,7 @@ protected:
 		const TOptional<uint16> Port,
 		const FString& PathAndQuery,
 		const TMap<FString, FString>& Headers,
-		const TSharedPtr<FRequestPayload, ESPMode::ThreadSafe>& Payload);
+		const TSharedPtr<FCH_RequestPayload, ESPMode::ThreadSafe>& Payload);
 
 	/// Request Setup
 
@@ -124,7 +124,7 @@ protected:
 	 * @param NewPayload the Payload object to set (it should not be modified during the request!)
 	 * @return True if we were able to set the payload, false otherwise
 	 */
-	bool SetPayload(const TSharedRef<FRequestPayload, ESPMode::ThreadSafe>& NewPayload);
+	bool SetPayload(const TSharedRef<FCH_RequestPayload, ESPMode::ThreadSafe>& NewPayload);
 
 	/// Sending Request
 
@@ -235,11 +235,11 @@ protected:
 
 	/// Members for internal request state
 	/** Handle to our connection object (do not reuse across requests!) */
-	FWinHttpHandle ConnectionHandle;
+	FCH_WinHttpHandle ConnectionHandle;
 	/** Handle to our request object (do not reuse across requests!)*/
-	FWinHttpHandle RequestHandle;
+	FCH_WinHttpHandle RequestHandle;
 	/** Keep-alive for this object, to ensure it does not destruct while a request is in progress */
-	TSharedPtr<FWinHttpConnectionConvaihttp, ESPMode::ThreadSafe> KeepAlive;
+	TSharedPtr<FCH_WinHttpConnectionConvaihttp, ESPMode::ThreadSafe> KeepAlive;
 
 	/** The current request state */
 	TOptional<EConvaihttpRequestStatus::Type> FinalState;
@@ -300,7 +300,7 @@ private:
 	/// Members for sending request
 
 	/** Payload body*/
-	TSharedPtr<FRequestPayload, ESPMode::ThreadSafe> Payload;
+	TSharedPtr<FCH_RequestPayload, ESPMode::ThreadSafe> Payload;
 	/** Amount of bytes from payload that has been sent successfully */
 	uint64 NumBytesSuccessfullySent = 0;
 	/** Data from the payload currently trying to be written */
@@ -326,19 +326,19 @@ private:
 	/// Members for reporting updates to main thread
 
 	/** Called on the game thread during tick if we have sent or received data since last tick */
-	FWinHttpConnectionConvaihttpOnDataTransferred OnDataTransferredHandler;
+	FCH_WinHttpConnectionConvaihttpOnDataTransferred OnDataTransferredHandler;
 	/** Data to report to the game thread about how many bytes have been sent since last tick (not total received) */
 	TOptional<uint64> BytesToReportSent;
 	/** Data to report to the game thread about how many bytes have been received since last tick (not total received) */
 	TOptional<uint64> BytesToReportReceived;
 
 	/** Called on the game thread during tick if we have received header data since last tick */
-	FWinHttpConnectionConvaihttpOnHeaderReceived OnHeaderReceivedHandler;
+	FCH_WinHttpConnectionConvaihttpOnHeaderReceived OnHeaderReceivedHandler;
 	/** List of headers we have received that we haven't told the game thread about yet */
 	TArray64<FString> HeaderKeysToReportReceived;
 
 	/** Called on the game thread if the request has completed since last tick */
-	FWinHttpConnectionConvaihttpOnRequestComplete OnRequestCompleteHandler;
+	FCH_WinHttpConnectionConvaihttpOnRequestComplete OnRequestCompleteHandler;
 };
 
 #endif // WITH_WINHTTP

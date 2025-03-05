@@ -10,31 +10,31 @@
 #include "Windows/AllowWindowsPlatformTypes.h"
 #include <errhandlingapi.h>
 
-FWinHttpHandle::FWinHttpHandle(HINTERNET NewHandle)
+FCH_WinHttpHandle::FCH_WinHttpHandle(HINTERNET NewHandle)
 	: Handle(NewHandle)
 {
 }
 
-FWinHttpHandle::~FWinHttpHandle()
+FCH_WinHttpHandle::~FCH_WinHttpHandle()
 {
 	if (Handle != nullptr)
 	{
 		if (!WinHttpCloseHandle(Handle))
 		{
 			const DWORD ErrorCode = GetLastError();
-			FWinHttpErrorHelper::LogWinHttpCloseHandleFailure(ErrorCode);
+			FCH_WinHttpErrorHelper::LogWinConvaiHttpCloseHandleFailure(ErrorCode);
 		}
 		Handle = nullptr;
 	}
 }
 
-FWinHttpHandle::FWinHttpHandle(FWinHttpHandle&& Other)
+FCH_WinHttpHandle::FCH_WinHttpHandle(FCH_WinHttpHandle&& Other)
 	: Handle(Other.Handle)
 {
 	Other.Handle = nullptr;
 }
 
-FWinHttpHandle& FWinHttpHandle::operator=(FWinHttpHandle&& Other)
+FCH_WinHttpHandle& FCH_WinHttpHandle::operator=(FCH_WinHttpHandle&& Other)
 {
 	if (this != &Other)
 	{
@@ -46,32 +46,32 @@ FWinHttpHandle& FWinHttpHandle::operator=(FWinHttpHandle&& Other)
 	return *this;
 }
 
-FWinHttpHandle& FWinHttpHandle::operator=(HINTERNET NewHandle)
+FCH_WinHttpHandle& FCH_WinHttpHandle::operator=(HINTERNET NewHandle)
 {
 	if (Handle != NewHandle)
 	{
-		*this = FWinHttpHandle(NewHandle);
+		*this = FCH_WinHttpHandle(NewHandle);
 	}
 
 	return *this;
 }
 
-void FWinHttpHandle::Reset()
+void FCH_WinHttpHandle::Reset()
 {
-	*this = FWinHttpHandle();
+	*this = FCH_WinHttpHandle();
 }
 
-FWinHttpHandle::operator bool() const
+FCH_WinHttpHandle::operator bool() const
 {
 	return IsValid();
 }
 
-bool FWinHttpHandle::IsValid() const
+bool FCH_WinHttpHandle::IsValid() const
 {
 	return Handle != nullptr;
 }
 
-HINTERNET FWinHttpHandle::Get() const
+HINTERNET FCH_WinHttpHandle::Get() const
 {
 	return Handle;
 }
