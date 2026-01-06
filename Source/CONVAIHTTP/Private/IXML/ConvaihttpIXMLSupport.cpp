@@ -2,6 +2,7 @@
 
 #include "ConvaihttpIXMLSupport.h"
 
+#ifdef PLATFORM_HOLOLENS
 #if PLATFORM_HOLOLENS
 
 #include "ConvaihttpIXML.h"
@@ -518,4 +519,5 @@ HRESULT RequestStream::Invoke(
 
 #include "HideWindowsPlatformTypes.h"
 
+#endif
 #endif

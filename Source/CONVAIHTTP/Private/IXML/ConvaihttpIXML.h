@@ -3,6 +3,7 @@
 
 #include "CoreTypes.h"
 
+#ifdef PLATFORM_HOLOLENS
 #if PLATFORM_HOLOLENS
 
 #include "ConvaihttpIXMLSupport.h"
@@ -125,4 +126,5 @@ private:
 
 };
 
+#endif
 #endif

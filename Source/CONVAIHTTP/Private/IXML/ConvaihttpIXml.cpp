@@ -4,6 +4,7 @@
 #include "ConvaihttpManager.h"
 #include "HAL/FileManager.h"
 
+#ifdef PLATFORM_HOLOLENS
 #if PLATFORM_HOLOLENS
 
 #define CHECK_SUCCESS(a)  { bool success = SUCCEEDED( (a) ); check( success ); }
@@ -628,3 +629,4 @@ FString FConvaihttpResponseIXML::GetContentAsString() const
 //	End of file
 
 #endif // PLATFORM_HOLOLENS
+#endif

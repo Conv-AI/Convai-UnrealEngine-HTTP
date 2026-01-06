@@ -3,6 +3,7 @@
 
 #include "CoreTypes.h"
 
+#ifdef PLATFORM_HOLOLENS
 #if PLATFORM_HOLOLENS
 
 
@@ -113,4 +114,5 @@ protected:
 
 #include "HoloLens/HideWindowsPlatformTypes.h"
 
+#endif
 #endif
