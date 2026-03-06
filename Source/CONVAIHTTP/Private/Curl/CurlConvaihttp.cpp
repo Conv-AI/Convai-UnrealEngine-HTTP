@@ -383,6 +383,12 @@ bool FCurlConvaihttpRequest::SetContentFromStream(TSharedRef<FArchive, ESPMode::
 	return true;
 }
 
+bool FCurlConvaihttpRequest::SetResponseBodyReceiveStream(TSharedRef<FArchive> Stream)
+{
+	ResponseBodyReceiveStream = Stream;
+	return true;
+}
+
 void FCurlConvaihttpRequest::SetHeader(const FString& HeaderName, const FString& HeaderValue)
 {
 	if (CompletionStatus == EConvaihttpRequestStatus::Processing)
@@ -540,8 +546,10 @@ size_t FCurlConvaihttpRequest::ReceiveResponseBodyCallback(void* Ptr, size_t Siz
 {
 	QUICK_SCOPE_CYCLE_COUNTER(STAT_FCurlConvaihttpRequest_ReceiveResponseBodyCallback);
 	check(Response.IsValid());
-	  
+
 	TimeSinceLastResponse = 0.0f;
+	size_t NumberOfBytesProcessed = 0;
+
 	if (Response.IsValid())
 	{
 		uint64 SizeToDownload = SizeInBlocks * BlockSizeInBytes;
@@ -550,18 +558,32 @@ size_t FCurlConvaihttpRequest::ReceiveResponseBodyCallback(void* Ptr, size_t Siz
 			this,
 			static_cast<int32>(Response->TotalBytesRead.GetValue() + SizeToDownload), Response->GetContentLength(),
 			static_cast<int32>(SizeInBlocks), static_cast<int32>(BlockSizeInBytes), Response->TotalBytesRead.GetValue(), Response->GetContentLength(), static_cast<int32>(SizeToDownload)
-			);
+		);
 
 		// note that we can be passed 0 bytes if file transmitted has 0 length
 		if (SizeToDownload > 0)
 		{
-			Response->Payload.AddUninitialized(SizeToDownload);
+			// Check if streaming to a custom stream/archive
+			if (ResponseBodyReceiveStream)
+			{
+				ResponseBodyReceiveStream->Serialize(Ptr, SizeToDownload);
 
-			// save
-			FMemory::Memcpy(static_cast<uint8*>(Response->Payload.GetData()) + Response->TotalBytesRead.GetValue(), Ptr, SizeToDownload);
-			Response->TotalBytesRead.Add(SizeToDownload);
+				if (!ResponseBodyReceiveStream->GetError())
+				{
+					NumberOfBytesProcessed = SizeToDownload;
+				}
+				// If error occurred, NumberOfBytesProcessed stays 0, which signals error to curl
+			}
+			else
+			{
+				// Original behavior: store in memory buffer
+				Response->Payload.AddUninitialized(SizeToDownload);
+				FMemory::Memcpy(static_cast<uint8*>(Response->Payload.GetData()) + Response->TotalBytesRead.GetValue(), Ptr, SizeToDownload);
+				NumberOfBytesProcessed = SizeToDownload;
+			}
 
-			return SizeToDownload;
+			Response->TotalBytesRead.Add(NumberOfBytesProcessed);
+			return NumberOfBytesProcessed;
 		}
 	}
 	else

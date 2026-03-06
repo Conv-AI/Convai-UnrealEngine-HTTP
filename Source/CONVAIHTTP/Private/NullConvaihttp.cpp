@@ -102,6 +102,12 @@ void FNullConvaihttpRequest::SetHeader(const FString& HeaderName, const FString&
 	Headers.Add(HeaderName, HeaderValue);
 }
 
+bool FNullConvaihttpRequest::SetResponseBodyReceiveStream(TSharedRef<FArchive> Stream)
+{
+	UE_LOG(LogConvaihttp, Warning, TEXT("FNullConvaihttpRequest::SetResponseBodyReceiveStream is not implemented"));
+	return false;
+}
+
 void FNullConvaihttpRequest::AppendToHeader(const FString& HeaderName, const FString& AdditionalHeaderValue)
 {
 	if (HeaderName.Len() > 0 && AdditionalHeaderValue.Len() > 0)

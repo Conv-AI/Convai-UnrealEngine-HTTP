@@ -128,6 +128,12 @@ void FAppleConvaihttpRequest::SetHeader(const FString& HeaderName, const FString
 	[Request setValue: HeaderValue.GetNSString() forCONVAIHTTPHeaderField: HeaderName.GetNSString()];
 }
 
+bool FAppleConvaihttpRequest::SetResponseBodyReceiveStream(TSharedRef<FArchive> Stream)
+{
+	UE_LOG(LogConvaihttp, Warning, TEXT("FAppleConvaihttpRequest::SetResponseBodyReceiveStream is not implemented"));
+	return false;
+}
+
 void FAppleConvaihttpRequest::AppendToHeader(const FString& HeaderName, const FString& AdditionalHeaderValue)
 {
     if (!HeaderName.IsEmpty() && !AdditionalHeaderValue.IsEmpty())

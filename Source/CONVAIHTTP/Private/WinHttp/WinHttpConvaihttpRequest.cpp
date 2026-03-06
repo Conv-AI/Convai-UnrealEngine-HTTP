@@ -168,6 +168,11 @@ bool FCH_WinHttpConvaihttpRequest::SetContentFromStream(TSharedRef<FArchive, ESP
 	return true;
 }
 
+bool FCH_WinHttpConvaihttpRequest::SetResponseBodyReceiveStream(TSharedRef<FArchive> Stream)
+{
+	return false;
+}
+
 void FCH_WinHttpConvaihttpRequest::SetHeader(const FString& HeaderName, const FString& HeaderValue)
 {
 	if (State == EConvaihttpRequestStatus::Processing)

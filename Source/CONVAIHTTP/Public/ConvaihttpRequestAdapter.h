@@ -37,6 +37,7 @@ public:
 	virtual void                          AppendToHeader(const FString& HeaderName, const FString& AdditionalHeaderValue) override { ConvaihttpRequest->AppendToHeader(HeaderName, AdditionalHeaderValue); }
 	virtual void                          SetTimeout(float InTimeoutSecs) override                                 { ConvaihttpRequest->SetTimeout(InTimeoutSecs); }
 	virtual void                          ClearTimeout() override                                                  { ConvaihttpRequest->ClearTimeout(); }
+	virtual bool						  SetResponseBodyReceiveStream(TSharedRef<FArchive> Stream) override { return ConvaihttpRequest->SetResponseBodyReceiveStream(Stream); }
 	virtual TOptional<float>              GetTimeout() const override                                              { return ConvaihttpRequest->GetTimeout(); }
 	virtual const FConvaihttpResponsePtr        GetResponse() const override                                             { return ConvaihttpRequest->GetResponse(); }
 	virtual float                         GetElapsedTime() const override                                          { return ConvaihttpRequest->GetElapsedTime(); }

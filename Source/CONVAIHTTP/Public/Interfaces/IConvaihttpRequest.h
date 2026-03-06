@@ -107,6 +107,7 @@ DECLARE_DELEGATE_ThreeParams(FConvaihttpRequestProgressDelegate, FConvaihttpRequ
  */
 DECLARE_DELEGATE_ThreeParams(FConvaihttpRequestWillRetryDelegate, FConvaihttpRequestPtr /*Request*/, FConvaihttpResponsePtr /*Response*/, float /*SecondsToRetry*/);
 
+
 /**
  * Interface for Convaihttp requests (created using FConvaihttpFactory)
  */
@@ -296,5 +297,22 @@ public:
 	 * Destructor for overrides 
 	 */
 	virtual ~IConvaihttpRequest() = default;
+
+	/**
+	 * Sets the stream to receive the response body. Make sure to handle the cleanup of stream when
+	 * Serialize generated error(Stream->GetError returns true after Stream->Serialize call), this
+	 * http request will fail and quit.
+	 *
+	 * NOTE: Once set, the data will no longer be cached in response, IHttpResponse::GetContent() and
+	 * IHttpResponse::GetContentAsString() will return empty result. The Stream->Serialize will be called
+	 * from another thread other than the game thread
+	 *
+	 * @param Stream - will be used to receive the response body
+	 * @return True if the stream can be used. False otherwise.
+	 */
+	virtual bool SetResponseBodyReceiveStream(TSharedRef<FArchive> Stream) = 0;
+
+	
+
 };
 

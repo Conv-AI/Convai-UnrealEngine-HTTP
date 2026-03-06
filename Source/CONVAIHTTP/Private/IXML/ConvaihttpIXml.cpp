@@ -184,6 +184,11 @@ bool FConvaihttpRequestIXML::SetContentFromStream(TSharedRef<FArchive, ESPMode::
 	return true;
 }
 
+bool FConvaihttpRequestIXML::SetResponseBodyReceiveStream(TSharedRef<FArchive> Stream)
+{
+	return false;
+}
+
 
 //-----------------------------------------------------------------------------
 //	
