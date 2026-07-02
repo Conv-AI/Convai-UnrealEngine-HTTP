@@ -11,12 +11,21 @@
 #include "Convaihttp.h"
 #include "GenericPlatform/ConvaihttpRequestPayload.h"
 #include "Misc/ScopeLock.h"
+#include "Misc/EngineVersionComparison.h"
 
 #include "Windows/AllowWindowsPlatformTypes.h"
 #include <errhandlingapi.h>
 
 #define UE_WINHTTP_WRITE_BUFFER_BYTES (8*1024)
 #define UE_WINHTTP_READ_BUFFER_BYTES (8*1024)
+
+// UE 5.5 replaced the `bool bAllowShrinking` argument on TArray sizing methods
+// with the `EAllowShrinking` enum. Keep older engines compiling with the bool.
+#if UE_VERSION_OLDER_THAN(5, 5, 0)
+	#define CONVAIHTTP_ALLOW_SHRINKING(bShrink) (bShrink)
+#else
+	#define CONVAIHTTP_ALLOW_SHRINKING(bShrink) ((bShrink) ? EAllowShrinking::Yes : EAllowShrinking::No)
+#endif
 
 void CALLBACK UE_WinHttpStatusConvaihttpCallback(HINTERNET hInternet, DWORD_PTR dwContext, DWORD dwInternetStatus, LPVOID lpvStatusInformation, DWORD dwStatusInformationLength)
 {
@@ -145,10 +154,10 @@ bool FCH_WinHttpConnectionConvaihttp::StartRequest()
 	if (Payload.IsValid())
 	{
 		const uint64 NumBytesToWriteNow = FMath::Min(static_cast<uint64>(UE_WINHTTP_WRITE_BUFFER_BYTES), Payload->GetContentLength());
-		PayloadBuffer.SetNumUninitialized(NumBytesToWriteNow, false);
+		PayloadBuffer.SetNumUninitialized(NumBytesToWriteNow, CONVAIHTTP_ALLOW_SHRINKING(false));
 
 		const uint64 BufferSize = Payload->FillOutputBuffer(PayloadBuffer, 0);
-		PayloadBuffer.SetNumUninitialized(BufferSize, false);
+		PayloadBuffer.SetNumUninitialized(BufferSize, CONVAIHTTP_ALLOW_SHRINKING(false));
 	}
 
 	CurrentAction = EState::SendRequest;
@@ -701,7 +710,7 @@ bool FCH_WinHttpConnectionConvaihttp::SendAdditionalRequestBody()
 	
 	// Resize buffer to max amount of data we can write
 	const uint64 OptimalAmountToWrite = FMath::Min(TotalBytesLeftToWrite, static_cast<uint64>(UE_WINHTTP_WRITE_BUFFER_BYTES));
-	PayloadBuffer.SetNumUninitialized(OptimalAmountToWrite, false);
+	PayloadBuffer.SetNumUninitialized(OptimalAmountToWrite, CONVAIHTTP_ALLOW_SHRINKING(false));
 
 	// Read data into our buffer if possible
 	const SIZE_T  ActualDataSize = Payload->FillOutputBuffer(PayloadBuffer, NumBytesSuccessfullySent);
@@ -713,7 +722,7 @@ bool FCH_WinHttpConnectionConvaihttp::SendAdditionalRequestBody()
 	}
 
 	// Resize our buffer based on how much was actually written to it
-	PayloadBuffer.SetNumUninitialized(ActualDataSize, false);
+	PayloadBuffer.SetNumUninitialized(ActualDataSize, CONVAIHTTP_ALLOW_SHRINKING(false));
 
 	UE_LOG(LogWinConvaiHttp, VeryVerbose, TEXT("WinHttp Convaihttp[%p]: Writing Data. NumBytes=[%d] TotalBytesWritten=[%d] TotalBytes=[%d]"), this, PayloadBuffer.Num(), NumBytesSuccessfullySent, Payload->GetContentLength())
 
@@ -791,7 +800,7 @@ bool FCH_WinHttpConnectionConvaihttp::ProcessResponseHeaders()
 	{
 		// Setup buffer to write headers into
 		TArray64<wchar_t> AllHeadersBuffer;
-		AllHeadersBuffer.SetNumUninitialized(OutHeaderByteSize / sizeof(wchar_t), false);
+		AllHeadersBuffer.SetNumUninitialized(OutHeaderByteSize / sizeof(wchar_t), CONVAIHTTP_ALLOW_SHRINKING(false));
 		BufferDestination = AllHeadersBuffer.GetData();
 
 		// Read headers into our buffer
