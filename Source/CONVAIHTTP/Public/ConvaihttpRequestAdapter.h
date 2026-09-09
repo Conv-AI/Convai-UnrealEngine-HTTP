@@ -18,6 +18,7 @@ public:
     {}
 
 	// IConvaihttpRequest interface
+	virtual bool SetTransportSecurityOptions(const FConvaihttpTransportSecurityOptions& Options) override { return ConvaihttpRequest->SetTransportSecurityOptions(Options); }
     virtual FString                       GetURL() const override                                                  { return ConvaihttpRequest->GetURL(); }
 	virtual FString                       GetURLParameter(const FString& ParameterName) const override             { return ConvaihttpRequest->GetURLParameter(ParameterName); }
 	virtual FString                       GetHeader(const FString& HeaderName) const override                      { return ConvaihttpRequest->GetHeader(HeaderName); }

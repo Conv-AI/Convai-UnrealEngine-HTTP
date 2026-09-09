@@ -154,6 +154,7 @@ public:
 	//~ End IConvaihttpBase Interface
 
 	//~ Begin IConvaihttpRequest Interface
+	virtual bool SetTransportSecurityOptions(const FConvaihttpTransportSecurityOptions& Options) override;
 	virtual FString GetVerb() const override;
 	virtual void SetVerb(const FString& InVerb) override;
 	virtual void SetURL(const FString& InURL) override;
@@ -230,6 +231,8 @@ public:
 	virtual ~FCurlConvaihttpRequest();
 
 private:
+	TOptional<FConvaihttpTransportSecurityOptions> TransportSecurityOptions;
+
 
 	/**
 	 * Static callback to be used as read function (CURLOPT_READFUNCTION), will dispatch the call to proper instance

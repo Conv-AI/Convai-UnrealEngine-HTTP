@@ -43,7 +43,8 @@ FCH_RequestPayloadInFileStream::~FCH_RequestPayloadInFileStream()
 
 uint64 FCH_RequestPayloadInFileStream::GetContentLength() const
 {
-	return static_cast<int32>(File->TotalSize());
+	const int64 Length = File->TotalSize();
+	return Length >= 0 ? static_cast<uint64>(Length) : 0;
 }
 
 const TArray64<uint8>& FCH_RequestPayloadInFileStream::GetContent() const
@@ -62,7 +63,15 @@ bool FCH_RequestPayloadInFileStream::CH_IsURLEncoded() const
 
 size_t FCH_RequestPayloadInFileStream::FillOutputBuffer(void* OutputBuffer, size_t MaxOutputBufferSize, size_t SizeAlreadySent)
 {
-	return FillOutputBuffer(TArray64<uint8>(static_cast<uint8*>(OutputBuffer), MaxOutputBufferSize), SizeAlreadySent);
+	// Write into the caller's buffer, without allocating or copying a temporary array.
+	const uint64 Length = GetContentLength();
+	if (File->IsError() || static_cast<uint64>(SizeAlreadySent) > Length) return 0;
+	const uint64 Count = FMath::Min<uint64>(Length - static_cast<uint64>(SizeAlreadySent), static_cast<uint64>(MaxOutputBufferSize));
+	if (Count == 0) return 0;
+	if (File->Tell() != static_cast<int64>(SizeAlreadySent)) File->Seek(static_cast<int64>(SizeAlreadySent));
+	if (File->IsError()) return 0;
+	File->Serialize(OutputBuffer, static_cast<int64>(Count));
+	return File->IsError() ? 0 : static_cast<size_t>(Count);
 }
 
 size_t FCH_RequestPayloadInFileStream::FillOutputBuffer(TArray64<uint8> OutputBuffer, size_t SizeAlreadySent)

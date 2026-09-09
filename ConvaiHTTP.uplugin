@@ -1,7 +1,7 @@
 {
 	"FileVersion": 3,
-	"Version": 11,
-	"VersionName": "1.1",
+	"Version": 12,
+	"VersionName": "1.2.0",
 	"FriendlyName": "ConvaiHTTP",
 	"Description": "",
 	"Category": "Other",
@@ -19,6 +19,14 @@
 			"Name": "CONVAIHTTP",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "ConvaiHTTPTransfer",
+			"Type": "Editor",
+			"LoadingPhase": "Default",
+			"PlatformAllowList": [
+				"Win64"
+			]
 		}
 	]
 }

@@ -89,6 +89,7 @@ FCurlConvaihttpRequest::FCurlConvaihttpRequest()
 	curl_easy_setopt(EasyHandle, CURLOPT_VERBOSE, 1L);
 
 	curl_easy_setopt(EasyHandle, CURLOPT_BUFFERSIZE, FCurlConvaihttpManager::CurlRequestOptions.BufferSize);
+	curl_easy_setopt(EasyHandle, CURLOPT_UPLOAD_BUFFERSIZE, 256L * 1024L);
 
 	curl_easy_setopt(EasyHandle, CURLOPT_TCP_KEEPALIVE, 1L);
 	curl_easy_setopt(EasyHandle, CURLOPT_TCP_KEEPIDLE, 30L);
@@ -512,9 +513,9 @@ size_t FCurlConvaihttpRequest::ReceiveResponseHeaderCallback(void* Ptr, size_t S
 				if (!HeaderKey.IsEmpty() && !HeaderValue.IsEmpty() && !bRedirected)
 				{
 					//Store the content length so OnRequestProgress() delegates have something to work with
-					if (HeaderKey == TEXT("Content-Length"))
+					if (HeaderKey.Equals(TEXT("Content-Length"), ESearchCase::IgnoreCase))
 					{
-						Response->ContentLength = FCString::Atoi(*HeaderValue);
+						Response->ContentLength = static_cast<uint64>(FMath::Max<int64>(0, FCString::Atoi64(*HeaderValue)));
 					}
 					Response->NewlyReceivedHeaders.Enqueue(TPair<FString, FString>(MoveTemp(HeaderKey), MoveTemp(HeaderValue)));
 				}
@@ -762,6 +763,13 @@ size_t FCurlConvaihttpRequest::DebugCallback(CURL * Handle, curl_infotype DebugI
 	return 0;
 }
 
+bool FCurlConvaihttpRequest::SetTransportSecurityOptions(const FConvaihttpTransportSecurityOptions& Options)
+{
+	if (GetStatus() == EConvaihttpRequestStatus::Processing) return false;
+	TransportSecurityOptions = Options;
+	return true;
+}
+
 bool FCurlConvaihttpRequest::SetupRequest()
 {
 	QUICK_SCOPE_CYCLE_COUNTER(STAT_FCurlConvaihttpRequest_SetupRequest);
@@ -833,6 +841,18 @@ bool FCurlConvaihttpRequest::SetupRequest()
 bool FCurlConvaihttpRequest::SetupRequestConvaihttpThread()
 {
 	QUICK_SCOPE_CYCLE_COUNTER(STAT_FCurlConvaihttpRequest_SetupRequestConvaihttpThread);
+	if (TransportSecurityOptions.IsSet())
+	{
+		const auto& Options = TransportSecurityOptions.GetValue();
+		const bool bVerifyPeer = Options.bRequireVerifiedTls || FCurlConvaihttpManager::CurlRequestOptions.bVerifyPeer;
+		// Only an explicit request policy changes these options. Legacy callers keep
+		// the constructor's global certificate policy and redirect behavior.
+		if (curl_easy_setopt(EasyHandle, CURLOPT_SSL_VERIFYPEER, bVerifyPeer ? 1L : 0L) != CURLE_OK ||
+			curl_easy_setopt(EasyHandle, CURLOPT_SSL_VERIFYHOST, 2L) != CURLE_OK ||
+			curl_easy_setopt(EasyHandle, CURLOPT_FOLLOWLOCATION, Options.bFollowRedirects ? 1L : 0L) != CURLE_OK)
+			return false;
+	}
+
 	{
 		QUICK_SCOPE_CYCLE_COUNTER(STAT_FCurlConvaihttpRequest_SetupRequest_SLIST_FREE_HEADERS);
 		curl_slist_free_all(HeaderList);
@@ -862,17 +882,14 @@ bool FCurlConvaihttpRequest::SetupRequestConvaihttpThread()
 			curl_easy_setopt(EasyHandle, CURLOPT_POSTFIELDS, NULL);
 			curl_easy_setopt(EasyHandle, CURLOPT_POSTFIELDSIZE_LARGE, static_cast<curl_off_t>(RequestPayload->GetContentLength()));
 #if WITH_CURL_XCURL
-			curl_easy_setopt(EasyHandle, CURLOPT_INFILESIZE, RequestPayload->GetContentLength());
-#else
-			curl_easy_setopt(EasyHandle, CURLOPT_POSTFIELDSIZE, RequestPayload->GetContentLength());
+			curl_easy_setopt(EasyHandle, CURLOPT_INFILESIZE_LARGE, static_cast<curl_off_t>(RequestPayload->GetContentLength()));
 #endif
 			bUseReadFunction = true;
 		}
 		else if (Verb == TEXT("PUT") || Verb == TEXT("PATCH"))
 		{
 			curl_easy_setopt(EasyHandle, CURLOPT_UPLOAD, 1L);
-			//curl_easy_setopt(EasyHandle, CURLOPT_INFILESIZE_LARGE, RequestPayload->GetContentLength());
-			curl_easy_setopt(EasyHandle, CURLOPT_POSTFIELDSIZE_LARGE, static_cast<curl_off_t>(RequestPayload->GetContentLength()));
+			curl_easy_setopt(EasyHandle, CURLOPT_INFILESIZE_LARGE, static_cast<curl_off_t>(RequestPayload->GetContentLength()));
 
 			if (Verb != TEXT("PUT"))
 			{
@@ -898,7 +915,7 @@ bool FCurlConvaihttpRequest::SetupRequestConvaihttpThread()
 
 			curl_easy_setopt(EasyHandle, CURLOPT_POST, 1L);
 			curl_easy_setopt(EasyHandle, CURLOPT_CUSTOMREQUEST, "DELETE");
-			curl_easy_setopt(EasyHandle, CURLOPT_POSTFIELDSIZE_LARGE , RequestPayload->GetContentLength());
+			curl_easy_setopt(EasyHandle, CURLOPT_POSTFIELDSIZE_LARGE, static_cast<curl_off_t>(RequestPayload->GetContentLength()));
 			bUseReadFunction = true;
 		}
 		else

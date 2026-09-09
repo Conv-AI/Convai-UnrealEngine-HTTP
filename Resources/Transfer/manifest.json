@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "plugin": "ConvaiHTTP",
+  "plugin_version": "1.2.0",
+  "module": "ConvaiHTTPTransfer",
+  "module_type": "Editor",
+  "loading_phase": "Default",
+  "platforms": [
+    "Win64"
+  ],
+  "commandlet": "ConvaiAvatarTransport",
+  "request_argument": "AvatarTransferRequest",
+  "request_schema": 1,
+  "result_schema": 1,
+  "transport_identity": "CONVAIHTTP-transfer-v3",
+  "max_file_bytes": "10485760000",
+  "methods": [
+    "GET",
+    "PUT"
+  ],
+  "requires_verified_tls": true,
+  "follows_redirects": false,
+  "response_body": "file_stream",
+  "credentials_in_command_line": false
+}

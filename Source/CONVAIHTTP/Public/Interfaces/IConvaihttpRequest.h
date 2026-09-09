@@ -108,6 +108,15 @@ DECLARE_DELEGATE_ThreeParams(FConvaihttpRequestProgressDelegate, FConvaihttpRequ
 DECLARE_DELEGATE_ThreeParams(FConvaihttpRequestWillRetryDelegate, FConvaihttpRequestPtr /*Request*/, FConvaihttpResponsePtr /*Response*/, float /*SecondsToRetry*/);
 
 
+/** Opt-in transport policy. Defaults preserve the platform's existing behavior. */
+struct FConvaihttpTransportSecurityOptions
+{
+	/** Require trusted certificates even when the process-wide curl policy disables peer verification. */
+	bool bRequireVerifiedTls = false;
+	/** Existing requests follow redirects; signed storage requests should disable this. */
+	bool bFollowRedirects = true;
+};
+
 /**
  * Interface for Convaihttp requests (created using FConvaihttpFactory)
  */
@@ -115,6 +124,11 @@ class IConvaihttpRequest :
 	public IConvaihttpBase, public TSharedFromThis<IConvaihttpRequest, ESPMode::ThreadSafe>
 {
 public:
+
+	/** Set before ProcessRequest. Returns false if unsupported or already processing.
+	 *  Callers requiring this policy must fail closed when it is not supported.
+	 *  Other backends retain their behavior and may opt into this interface later. */
+	virtual bool SetTransportSecurityOptions(const FConvaihttpTransportSecurityOptions& Options) { return false; }
 
 	/**
 	 * Gets the verb (GET, PUT, POST) used by the request.
